@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Report - Pro Max</title>
+
+    <link rel="stylesheet" href="style1.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="p-4 md:p-10">
+
+    <main class="max-w-7xl mx-auto space-y-6 relative z-10">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+            <div class="premium-card"><div class="inner-content stat-box">
+                <div class="flex items-center gap-3"><i data-lucide="users" class="text-green-500 w-6 h-6"></i><p class="label-text">Referral</p></div>
+                <h3 class="amount-text orbitron" id="direct-count">0</h3>
+            </div></div>
+
+            <div class="premium-card"><div class="inner-content stat-box">
+                <div class="flex items-center gap-3"><i data-lucide="network" class="text-emerald-500 w-6 h-6"></i><p class="label-text">Total Team</p></div>
+                <h3 class="amount-text orbitron" id="team-count">0</h3>
+            </div></div>
+
+            <div class="premium-card"><div class="inner-content stat-box">
+                <div class="flex items-center gap-3"><i data-lucide="banknote" class="text-yellow-600 w-6 h-6"></i><p class="label-text">Earned</p></div>
+                <h3 class="amount-text orbitron"><span id="total-earned">0.00</span></h3>
+            </div></div>
+
+            <div class="premium-card"><div class="inner-content stat-box">
+                <div class="flex items-center gap-3"><i data-lucide="user-plus" class="text-yellow-500 w-6 h-6"></i><p class="label-text">Direct</p></div>
+                <h3 class="amount-text orbitron" id="direct-earnings">0.00</h3>
+            </div></div>
+
+            <div class="premium-card"><div class="inner-content stat-box">
+                <div class="flex items-center gap-3"><i data-lucide="layers" class="text-purple-500 w-6 h-6"></i><p class="label-text">Level</p></div>
+                <h3 class="amount-text orbitron" id="level-earnings">0.00</h3>
+            </div></div>
+        </div>
+
+        <div class="premium-card">
+            <div class="inner-content !block py-8">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+                    <h3 class="text-sm font-black orbitron uppercase italic text-yellow-500">Team Report</h3>
+                    
+                    <div class="flex items-center gap-3 bg-black/50 p-2 px-4 rounded-xl border border-white/10">
+                        <span class="label-text">Select Level:</span>
+                        <select id="levelSelect" onchange="loadLevelData(this.value)" class="bg-transparent text-yellow-500 font-black orbitron text-xs outline-none cursor-pointer">
+                            <script>for(let i=1; i<=15; i++) document.write(`<option value="${i}">Level ${i}</option>`);</script>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="luxury-table">
+                        <thead>
+                            <tr>
+                                <th>USER ADDRESS</th>
+                                <th>LEVEL</th>
+                                <th>TOTAL DEPOSIT</th>
+                                <th>TEAM VOLUME</th>
+                                <th>STATUS</th>
+                                <th>JOIN DATE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="team-table-body" class="text-gray-400">
+                            <tr><td colspan="6" class="p-10 text-center italic text-gray-600">Syncing Network...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="components.js"></script> 
+    <script src="web3-handler.js"></script>
+    
+    <script>
+        lucide.createIcons();
+
+        // Web3 Data Loading Logic
+        async function loadReferralData() {
+            if (typeof window.contract === 'undefined' || !window.signer) {
+                setTimeout(loadReferralData, 1000);
+                return;
+            }
+            try {
+                const address = await window.signer.getAddress();
+                const [user, extra] = await Promise.all([
+                    window.contract.users(address),
+                    window.contract.usersExtra(address)
+                ]);
+
+                document.getElementById('direct-count').innerText = extra.directsCount.toString();
+                document.getElementById('team-count').innerText = extra.teamCount.toString();
+                document.getElementById('total-earned').innerText = format(user.totalEarnings);
+                document.getElementById('level-earnings').innerText = format(extra.rewardsReferral);
+                document.getElementById('direct-earnings').innerText = format(extra.rewardsOnboarding);
+
+                loadLevelData(1);
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadLevelData(level) {
+            const tableBody = document.getElementById('team-table-body');
+            tableBody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-yellow-500 orbitron animate-pulse">LOADING LEVEL ${level}...</td></tr>`;
+            try {
+                const address = await window.signer.getAddress();
+                const res = await window.contract.getLevelTeamDetails(address, level);
+                const wallets = res.wallets || res[1] || [];
+                const joinDates = res.joinDates || res[2] || [];
+                const activeDeps = res.activeDeps || res[3] || [];
+                const teamTotalDeps = res.teamTotalDeps || res[4] || [];
+
+                if (!wallets.length) {
+                    tableBody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-gray-600 italic uppercase text-[10px]">No Data in Level ${level}</td></tr>`;
+                    return;
+                }
+
+                let html = '';
+                for (let i = 0; i < wallets.length; i++) {
+                    const activeAmt = format(activeDeps[i]);
+                    const status = parseFloat(activeAmt) > 0 ? '<span class="text-green-500 font-bold">ACTIVE</span>' : '<span class="text-red-500 font-bold">INACTIVE</span>';
+                    
+                    html += `<tr>
+                        <td class="font-mono text-yellow-500">${wallets[i].substring(0,8)}...${wallets[i].substring(34)}</td>
+                        <td class="text-gray-400 font-bold">Lvl ${level}</td>
+                        <td class="text-white font-black">${activeAmt}</td>
+                        <td class="text-gray-400">${format(teamTotalDeps[i])}</td>
+                        <td class="text-[10px] italic">${status}</td>
+                        <td class="text-gray-500 font-mono text-[11px]">${new Date(joinDates[i].toNumber() * 1000).toLocaleDateString()}</td>
+                    </tr>`;
+                }
+                tableBody.innerHTML = html;
+            } catch (err) { tableBody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-red-500">Sync Error</td></tr>`; }
+        }
+
+        window.addEventListener('load', () => setTimeout(loadReferralData, 1200));
+    </script>
+</body>
+
+</html>

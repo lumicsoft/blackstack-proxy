@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Deposits | Pro Max</title>
+
+    <link rel="stylesheet" href="style1.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        .status-badge { background: rgba(34, 197, 94, 0.1); color: #22c55e; padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .progress-container { background: rgba(255,255,255,0.05); height: 6px; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        .progress-bar-node { background: linear-gradient(90deg, #FFD700, #B8860B); height: 100%; box-shadow: 0 0 10px rgba(184, 134, 11, 0.5); transition: width 1s ease-in-out; }
+        .amount-text { font-size: 22px; font-weight: 800; color: #ffffff !important; }
+        .chart-container { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 20px; margin-bottom: 30px; }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-7xl mx-auto space-y-8 pt-10 relative z-10">
+        
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-black orbitron italic uppercase tracking-tighter">
+                    Active <span class="text-yellow-500">Deposits</span>
+                </h1>
+                <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">Mining Node Performance</p>
+            </div>
+            <button onclick="loadActiveDeposits()" class="bg-white/5 border border-white/10 p-3 rounded-xl hover:bg-white/10 transition-all group">
+                <i data-lucide="refresh-cw" class="w-5 h-5 text-yellow-500 group-hover:rotate-180 transition-transform duration-500"></i>
+            </button>
+        </div>
+
+        <div class="chart-container">
+            <p class="orbitron text-[10px] text-yellow-500 mb-4 uppercase tracking-widest">Earnings Projection (21 Days)</p>
+            <canvas id="performanceChart" height="100"></canvas>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="premium-card"><div class="inner-content stat-box">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-white/5 rounded-xl border border-white/10"><i data-lucide="database" class="text-yellow-500 w-6 h-6"></i></div>
+                    <p class="label-text">Total Active Capital</p>
+                </div>
+                <h3 class="amount-text orbitron">$<span id="total-active-capital">0.00</span></h3>
+            </div></div>
+
+            <div class="premium-card"><div class="inner-content stat-box">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-white/5 rounded-xl border border-white/10"><i data-lucide="trending-up" class="text-green-500 w-6 h-6"></i></div>
+                    <p class="label-text">Daily Profit (0.9%)</p>
+                </div>
+                <h3 class="amount-text orbitron text-green-400">$<span id="total-daily-profit">0.00</span></h3>
+            </div></div>
+        </div>
+
+        <div id="deposits-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+            <div class="col-span-full text-center py-20">
+                <div class="inline-block animate-spin text-yellow-500 mb-4"><i data-lucide="refresh-cw" class="w-10 h-10"></i></div>
+                <p class="orbitron text-xs text-gray-500 uppercase tracking-widest">Scanning Blockchain Nodes...</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="components.js"></script>
+    <script src="web3-handler.js"></script>
+    
+    <script>
+        const DAILY_ROI = 0.9; 
+        const DURATION_DAYS = 15;
+        let myChart = null;
+
+        function updateChart(totalActive) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            const labels = Array.from({length: 22}, (_, i) => `Day ${i}`);
+            const data = labels.map((_, i) => (totalActive * (1 + (DAILY_ROI/100) * i)).toFixed(2));
+
+            if(myChart) myChart.destroy();
+            
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Projected Balance',
+                        data: data,
+                        borderColor: '#FFD700',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#555', font: { size: 9 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#555', font: { size: 9 } } }
+                    }
+                }
+            });
+        }
+
+        async function loadActiveDeposits() {
+            const grid = document.getElementById('deposits-grid');
+            
+            // --- FIX 1: Check Global Contract ---
+            const activeContract = window.contract || contract;
+            if (!activeContract) { 
+                console.log("Waiting for contract...");
+                setTimeout(loadActiveDeposits, 1000); 
+                return; 
+            }
+
+            try {
+               
+                let address = localStorage.getItem('userAddress');
+                if (!address && window.signer) {
+                    address = await window.signer.getAddress();
+                }
+
+                if (!address) {
+                    grid.innerHTML = `<div class="col-span-full text-center py-20 text-yellow-500 orbitron uppercase text-[10px]">Please Connect Wallet</div>`;
+                    return;
+                }
+
+                const userData = await activeContract.users(address);
+                const totalActive = parseFloat(ethers.utils.formatUnits(userData.totalActiveDeposit, 18));
+                
+                document.getElementById('total-active-capital').innerText = totalActive.toLocaleString(undefined, {minimumFractionDigits: 2});
+                document.getElementById('total-daily-profit').innerText = (totalActive * (DAILY_ROI / 100)).toLocaleString(undefined, {minimumFractionDigits: 2});
+
+                updateChart(totalActive);
+
+                let html = '';
+                let foundAny = false;
+
+                // Loop for positions
+                for (let i = 0; i < 50; i++) {
+                    try {
+                        const pos = await activeContract.getPosition(address, i);
+                        const amount = parseFloat(ethers.utils.formatUnits(pos.amount, 18));
+                        
+                        if (amount === 0) {
+                            if (i > 10) break; 
+                            continue;
+                        }
+
+                        if (pos.active) {
+                            foundAny = true;
+                            const startTime = parseInt(pos.startTime);
+                            const currentTime = Math.floor(Date.now() / 1000);
+                            const durationSeconds = DURATION_DAYS * 24 * 60 * 60;
+                            const elapsed = currentTime - startTime;
+                            
+                            let progress = ((elapsed / durationSeconds) * 100).toFixed(2);
+                            if (progress > 100) progress = 100;
+                            if (progress < 0) progress = 0;
+
+                            html += `
+                            <div class="premium-card">
+                                <div class="inner-content !block">
+                                    <div class="flex justify-between items-start mb-6">
+                                        <div>
+                                            <p class="label-text mb-1">Node Value</p>
+                                            <h3 class="text-xl font-black orbitron text-white">$${amount.toLocaleString()}</h3>
+                                        </div>
+                                        <span class="status-badge animate-pulse">RUNNING</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3 mb-6">
+                                        <div class="bg-black/40 p-3 rounded-xl border border-white/5">
+                                            <p class="text-[8px] text-gray-500 font-bold uppercase mb-1">Daily Yield</p>
+                                            <p class="text-xs font-bold text-green-400">$${(amount * (DAILY_ROI/100)).toFixed(2)}</p>
+                                        </div>
+                                        <div class="bg-black/40 p-3 rounded-xl border border-white/5">
+                                            <p class="text-[8px] text-gray-500 font-bold uppercase mb-1">Status</p>
+                                            <p class="text-xs font-bold text-yellow-500">ACTIVE</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-[10px] font-black orbitron">
+                                            <span class="text-gray-500 uppercase">Cycle Progress</span>
+                                            <span class="text-yellow-500">${progress}%</span>
+                                        </div>
+                                        <div class="progress-container">
+                                            <div class="progress-bar-node" style="width: ${progress}%"></div>
+                                        </div>
+                                        <p class="text-[9px] text-gray-600 text-center italic mt-2">Term: ${DURATION_DAYS} Days @ ${DAILY_ROI}% Daily</p>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }
+                    } catch (e) { break; }
+                }
+                
+                grid.innerHTML = foundAny ? html : `<div class="col-span-full text-center py-20 text-gray-600 uppercase text-[10px] border border-dashed border-white/10 rounded-3xl">No Active Mining Nodes Found</div>`;
+                lucide.createIcons();
+            } catch (err) {
+                console.error(err);
+                grid.innerHTML = `<div class="col-span-full text-center py-20 text-red-500 orbitron uppercase text-[10px]">Sync Error: Wallet possibly locked</div>`;
+            }
+        }
+        
+        window.addEventListener('load', () => {
+           
+            setTimeout(loadActiveDeposits, 1500);
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
+
+
+
+

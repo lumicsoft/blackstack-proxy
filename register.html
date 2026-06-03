@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Earn BNB</title>
+
+    <link rel="stylesheet" href="style1.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Plus+Jakarta+Sans:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Unique input style for Register page only */
+        .input-field { 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 12px; 
+            border-radius: 12px; 
+            width: 100%; 
+            color: white; 
+            outline: none; 
+            transition: 0.3s; 
+        }
+        .input-field:focus { 
+            border-color: #FFD700; 
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); 
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <script src="components.js"></script>
+
+    <main class="flex-grow flex items-center justify-center px-6 py-20 relative overflow-hidden z-10">
+        
+        <div class="premium-card w-full max-w-md">
+            <div class="inner-content !block p-8 rounded-3xl">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-black orbitron uppercase tracking-tighter mb-2 italic">
+                        Create <span class="text-yellow-500">Account</span>
+                    </h1>
+                    <p class="text-gray-400 text-[10px] tracking-widest uppercase font-bold">Fast & Secure Registration</p>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Your Username</label>
+                        <input type="text" id="reg-username" placeholder="Above 3 characters username" class="input-field orbitron text-xs">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Referrer ID</label>
+                        <input type="text" id="reg-referrer" placeholder="Referrer username" class="input-field orbitron text-xs">
+                        <p id="ref-status" class="text-[9px] mt-2 text-yellow-500 hidden italic uppercase font-bold animate-pulse">Referral Active</p>
+                    </div>
+
+                    <button onclick="initiateRegister()" id="reg-btn" class="btn-gold-pro w-full py-4 orbitron font-black tracking-widest rounded-xl">
+                        REGISTER NOW
+                    </button>
+
+                    <p class="text-center text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+                        Already registered? <a href="#" onclick="initiateLogin()" class="text-yellow-500 hover:underline cursor-pointer">Login here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="web3-handler.js"></script>
+
+    <script>
+        // Referral Auto-fill Logic
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            if (ref) {
+                const el = document.getElementById('reg-referrer');
+                el.value = ref; 
+                el.readOnly = true; 
+                el.style.opacity = "0.6";
+                document.getElementById('ref-status').classList.remove('hidden');
+            }
+        });
+
+        async function initiateRegister() {
+            if (window.handleRegister && typeof window.handleRegister === 'function') {
+                await window.handleRegister();
+            } else {
+                alert("Blockchain is still connecting. Please wait a second and try again.");
+            }
+        }
+
+        async function initiateLogin() {
+            if (window.handleLogin && typeof window.handleLogin === 'function') {
+                await window.handleLogin();
+            } else {
+                alert("Wallet connection pending. Please try again.");
+            }
+        }
+    </script>
+</body>
+</html>

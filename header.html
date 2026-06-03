@@ -1,0 +1,48 @@
+<nav class="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center relative z-50">
+    <div class="flex items-center gap-2 cursor-pointer" onclick="location.href='index.html'">
+        <div class="w-10 h-10 bg-gradient-to-tr from-cyan-400 to-purple-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="component" class="text-white"></i>
+        </div>
+        <span class="text-xl font-black orbitron tracking-tighter uppercase">Pro <span class="text-gradient">Maxx</span></span>
+    </div>
+
+    <div class="hidden lg:flex gap-8 text-xs font-bold uppercase tracking-widest text-gray-400 items-center">
+        <a href="index.html" class="nav-link hover:text-cyan-400 transition">Home</a>
+        <a href="about.html" class="nav-link hover:text-cyan-400 transition">About</a>
+        <a href="docs.html" class="nav-link hover:text-cyan-400 transition">Docs</a>
+        
+        <button onclick="handleLogin()" class="nav-link text-white hover:text-cyan-400 transition border-l border-white/10 pl-6 ml-2 uppercase">
+            Login
+        </button>
+        <a href="register.html" class="nav-link text-cyan-400 hover:text-white transition uppercase">Register</a>
+    </div>
+
+    <div class="flex items-center gap-4">
+        <button id="connect-btn" onclick="handleLogin()" class="glass px-6 py-2 text-xs font-bold border-cyan-500/30 text-cyan-400">
+            Connect Wallet
+        </button>
+        
+        <button id="menu-btn" class="lg:hidden text-gray-400 hover:text-cyan-400">
+            <i data-lucide="menu" id="menu-icon"></i>
+        </button>
+    </div>
+
+    <div id="mobile-menu" class="hidden absolute top-full left-0 w-full glass mt-2 p-6 flex flex-col gap-4 text-center text-xs font-bold uppercase tracking-widest lg:hidden z-[100]">
+        <a href="index.html" class="nav-link block py-2 hover:text-cyan-400">Home</a>
+        <hr class="border-white/5">
+        <a href="about.html" class="nav-link block py-2 hover:text-cyan-400">About</a>
+        <hr class="border-white/5">
+        <a href="docs.html" class="nav-link block py-2 hover:text-cyan-400">Docs</a>
+        <hr class="border-white/5">
+        
+        <div class="grid grid-cols-2 gap-4 mt-2">
+            <button onclick="handleLogin()" class="py-3 border border-white/10 rounded-xl text-gray-400 uppercase">
+                Login
+            </button>
+            <a href="register.html" class="py-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 flex items-center justify-center">
+                Register
+            </a>
+        </div>
+    </div>
+
+</nav>

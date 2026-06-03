@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leadership | Pro Max</title>
+    
+    <link rel="stylesheet" href="style1.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Sirf progress bar yahan rakhi hai kyunki ye unique hai */
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #FFD700, #B8860B); transition: width 1s ease-in-out; }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-7xl mx-auto space-y-6 pt-10 pb-20 relative z-10">
+        
+        <div class="mb-8">
+            <h1 class="text-3xl font-black orbitron italic uppercase tracking-tighter">Leadership <span class="text-yellow-500">Overview</span></h1>
+            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">Based on Contract Ranks (Star1 - Master King)</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="premium-card"><div class="inner-content stat-box">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-white/5 rounded-xl border border-white/10 text-green-500"><i data-lucide="shield-check"></i></div>
+                    <div><p class="label-text">Your Current Rank</p><h2 id="rank-display" class="text-xl font-black orbitron">NO RANK</h2></div>
+                </div>
+                <p id="rank-bonus-display" class="text-green-400 font-bold text-[10px] italic">0% Leadership ROI</p>
+            </div></div>
+
+            <div class="premium-card"><div class="inner-content stat-box">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-white/5 rounded-xl border border-white/10 text-yellow-500"><i data-lucide="award"></i></div>
+                    <div><p class="label-text">Next Target Rank</p><h2 id="next-rank-display" class="text-xl font-black orbitron italic text-yellow-500">STAR1</h2></div>
+                </div>
+                <i data-lucide="trending-up" class="text-gray-600"></i>
+            </div></div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="premium-card"><div class="inner-content text-center">
+                <p class="label-text mb-1">Rank Rewards Available</p>
+                <h3 class="text-xl font-black orbitron text-green-400">$<span id="rank-reward-available">0.00</span></h3>
+            </div></div>
+            <div class="premium-card"><div class="inner-content text-center">
+                <p class="label-text mb-1">Direct Qualifiers</p>
+                <h3 class="text-xl font-black orbitron text-white"><span id="directs-quali">0</span> Users</h3>
+            </div></div>
+            <div class="premium-card"><div class="inner-content text-center">
+                <p class="label-text mb-1">Team Total Volume</p>
+                <h3 class="text-xl font-black orbitron text-yellow-500">$<span id="team-total-deposit">0.00</span></h3>
+            </div></div>
+            <div class="premium-card"><div class="inner-content text-center">
+                <p class="label-text mb-1">Team Active Volume</p>
+                <h3 class="text-xl font-black orbitron text-emerald-400">$<span id="team-active-deposit">0.00</span></h3>
+            </div></div>
+        </div>
+
+        <div class="premium-card"><div class="inner-content !block py-8">
+            <h3 class="text-sm font-black orbitron uppercase italic text-yellow-500 mb-6 flex items-center gap-2"><i data-lucide="zap" class="w-4 h-4"></i> Milestone Progress</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-end"><p class="label-text">Team Count Requirement</p><p class="orbitron text-xs"><span id="current-team-count">0</span> <span class="text-gray-600">/ <span id="target-team-count">100</span></span></p></div>
+                    <div class="h-2 bg-white/5 rounded-full overflow-hidden"><div id="team-count-bar" class="progress-bar-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-end"><p class="label-text">Team Active Business</p><p class="orbitron text-xs">$<span id="current-team-volume">0</span> <span class="text-gray-600">/ $<span id="target-team-volume">5,000</span></span></p></div>
+                    <div class="h-2 bg-white/5 rounded-full overflow-hidden"><div id="team-volume-bar" class="progress-bar-fill" style="width: 0%"></div></div>
+                </div>
+            </div>
+        </div></div>
+
+        <div class="premium-card"><div class="inner-content !block">
+            <h3 class="text-sm font-black orbitron uppercase italic text-yellow-500 mb-6 flex items-center gap-2">
+                <i data-lucide="list" class="w-4 h-4"></i> Leadership Rank Chart
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="luxury-table">
+                    <thead>
+                        <tr><th>Rank</th><th>Differential %</th><th>Team Count</th><th>Team Active Business</th></tr>
+                    </thead>
+                    <tbody class="text-gray-400">
+                        <tr><td class="text-white font-bold">Star1</td><td class="text-yellow-500 font-bold">1.00%</td><td>10</td><td>$500</td></tr>
+                        <tr><td class="text-white font-bold">Star2</td><td class="text-yellow-500 font-bold">2.00%</td><td>20</td><td>$1000</td></tr>
+                        <tr><td class="text-white font-bold">Star3</td><td class="text-yellow-500 font-bold">3.00%</td><td>50</td><td>$2500</td></tr>
+                        <tr><td class="text-white font-bold">Star4</td><td class="text-yellow-500 font-bold">4.00%</td><td>75</td><td>$5000</td></tr>
+                        <tr><td class="text-white font-bold">Star5</td><td class="text-yellow-500 font-bold">5.00%</td><td>100</td><td>$10000</td></tr>
+                        <tr><td class="text-white font-bold">Kings Star</td><td class="text-yellow-500 font-bold">7.00%</td><td>250</td><td>$50000</td></tr>
+                        <tr><td class="text-white font-bold">Master King</td><td class="text-yellow-500 font-bold">7.50%</td><td>250</td><td>$50000 + 10 Kings Stars</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div></div>
+
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="components.js"></script>
+    <script src="web3-handler.js"></script>
+    <script>
+        lucide.createIcons();
+
+        const ranks = [
+            { name: "No Rank", pct: "0%", count: , vol: 00 },
+            { name: "Star1", pct: "1.00%", count: 1, vol: 5 },
+            { name: "Star2", pct: "2.00%", count: 2, vol: 10 },
+            { name: "Star3", pct: "3.00%", count: 3, vol: 25 },
+            { name: "Star4", pct: "4.00%", count: 4, vol: 50},
+            { name: "Star5", pct: "5.00%", count: 5, vol: 100},
+            { name: "Kings Star", pct: "7.00%", count: 6, vol: 500 },
+            { name: "Master King", pct: "7.50%", count: 7, vol: 1000 }
+        ];
+
+        function updateRankUI(userExtra, teamActiveDeposit) {
+            const currentRankIndex = userExtra.rank;
+            const nextRank = ranks[currentRankIndex + 1] || ranks[7];
+            
+            document.getElementById('rank-display').innerText = ranks[currentRankIndex].name;
+            document.getElementById('rank-bonus-display').innerText = ranks[currentRankIndex].pct + " Leadership ROI";
+            document.getElementById('next-rank-display').innerText = nextRank.name;
+            
+            document.getElementById('target-team-count').innerText = nextRank.count;
+            document.getElementById('target-team-volume').innerText = nextRank.vol.toLocaleString();
+            
+            const countProgress = (userExtra.teamCount / nextRank.count) * 100;
+            const volProgress = (teamActiveDeposit / nextRank.vol) * 100;
+            
+            document.getElementById('team-count-bar').style.width = Math.min(countProgress, 100) + "%";
+            document.getElementById('team-volume-bar').style.width = Math.min(volProgress, 100) + "%";
+        }
+    </script>
+</body>
+
+</html>

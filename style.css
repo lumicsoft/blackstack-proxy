@@ -1,0 +1,115 @@
+:root {
+    /* New Premium Color Palette: Gold, Emerald & Deep Royal */
+    --primary: #fbbf24;    /* Gold */
+    --secondary: #10b981;  /* Emerald Green */
+    --accent: #f59e0b;     /* Amber */
+    --bg-dark: #05070a;    /* Obsidian Black */
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg-dark);
+    color: #f8fafc;
+    overflow-x: hidden;
+    margin: 0;
+}
+
+.orbitron { font-family: 'Orbitron', sans-serif; }
+
+/* Animated Background Canvas */
+#bg-canvas {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1;
+    /* Deep radial gradient for better depth */
+    background: radial-gradient(circle at 50% 10%, #0d1a15 0%, #05070a 100%);
+}
+
+/* Glassmorphism - Thinner and more transparent */
+.glass {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(251, 191, 36, 0.1); /* Slight gold tint */
+    border-radius: 24px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Premium Running Border - Smooth Gold Flow */
+.premium-border {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.premium-border::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    /* Luxury Gold & Emerald Gradient */
+    background: conic-gradient(
+        transparent, 
+        var(--primary), 
+        rgba(16, 185, 129, 0.5), 
+        var(--accent), 
+        transparent 40%
+    );
+    animation: rotate-border 6s linear infinite; /* Slower = More Premium */
+    z-index: -2;
+}
+
+.premium-border::after {
+    content: '';
+    position: absolute;
+    inset: 2px; /* Thinner border line */
+    background: #080c14; /* Deep Navy Black */
+    border-radius: 22px;
+    z-index: -1;
+}
+
+@keyframes rotate-border {
+    100% { transform: rotate(360deg); }
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #fbbf24 0%, #10b981 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+/* Button with Gold Glow */
+.btn-glow {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #000 !important; /* Black text on gold is very readable */
+    font-weight: 900;
+    box-shadow: 0 10px 25px rgba(251, 191, 36, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-glow:hover {
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
+    transform: translateY(-2px);
+}
+
+.icon-circle {
+    width: 60px; height: 60px;
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    transition: all 0.5s ease;
+    color: var(--primary);
+}
+
+.icon-circle:hover {
+    border-color: var(--secondary);
+    color: var(--secondary);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+@media (max-width: 768px) {
+    .hero-title { 
+        font-size: 3.5rem !important; 
+        letter-spacing: -2px;
+    }
+}
