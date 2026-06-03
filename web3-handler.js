@@ -1,8 +1,8 @@
 let provider, signer, contract;
 
 // --- CONFIGURATION ---
-const CONTRACT_ADDRESS = "0xc7a3d01dc8e8716aC0519C163D0fD1Db9faA82Bb"; 
-const USDT_TOKEN_ADDRESS = "0x3b66b1e08f55af26c8ea14a73da64b6bc8d799de"; // BSC USDT
+const CONTRACT_ADDRESS = "0x16649074958792577eb43e607b2877CA6b56D8dc"; 
+const USDT_TOKEN_ADDRESS = "0x0C978102175c6b9f90Dd53b249C1E5EdbF82DC3A"; // BSC USDT
 const TESTNET_CHAIN_ID = 97; 
 
 // --- RANK CONFIG (Star1 to Master King) ---
@@ -19,20 +19,14 @@ const RANK_DETAILS = [
 
 // --- ABI (Full Updated for USDT Contract) ---
 const CONTRACT_ABI = [
-    "function register(string username, string referrerUsername) external",
-    "function deposit(uint256 amount) external", 
-    "function claimRewards() external",
-    "function reinvestRewards() external",
-    "function reinvestMatured() external",
-    "function withdrawMaturedCapital() external",
-    "function getRankName(uint8 rankId) public view returns (string)",
-    "function getLevelTeamDetails(address _upline, uint256 _level) view returns (string[] names, address[] wallets, uint256[] joinDates, uint256[] activeDeps, uint256[] teamTotalDeps, uint256[] teamActiveDeps, uint256[] withdrawals)",
-    "function getLiveBalance(address uA) view returns (uint256 pendingROI)",
-    "function users(address) view returns (address referrer, string username, bool registered, uint256 joinDate, uint256 totalActiveDeposit, uint256 teamActiveDeposit, uint256 teamTotalDeposit, uint256 totalDeposited, uint256 totalWithdrawn, uint256 totalEarnings)",
-    "function usersExtra(address) view returns (uint256 rewardsReferral, uint256 rewardsRank, uint256 reserveDailyROI,uint256 totalEarnedROI,uint256 totalEarnedLevel,uint256 totalEarnedRank,  uint32 teamCount, uint32 directsCount, uint32 directsQuali, uint8 rank)",
-    "function getPosition(address uA, uint256 i) view returns (tuple(uint256 amount, uint256 startTime, uint256 lastCheckpoint, uint256 endTime, uint256 earned, uint256 expectedTotalEarn, bool active) v)",
-    "function getUserTotalPositions(address uA) view returns (uint256)",
-    "function getUserHistory(address _user) view returns (tuple(string txType, uint256 amount, uint256 timestamp, string detail)[])"
+    "function register(address referrer) external",
+    "function stake(uint256 amount, bool withBurn, address referrer) external",
+    "function withdraw(uint256 amount) external",
+    "function requestUnstake(uint256 stakeIndex) external",
+    "function claimUnstake(uint256 stakeIndex) external",
+    "function users(address) view returns (bool exists, address referrer, uint256 totalStaked, uint256 totalIncome, uint256 totalWithdrawn, uint256 activeDirects, uint256 teamCount)",
+    "function getIncomeHistory(address user) external view returns(tuple(string incomeType, uint256 amount, uint256 timestamp)[])",
+    "function getUserStats(address user) external view returns(uint256 totalStaked, uint256 totalIncome, uint256 totalWithdrawn, uint256 activeDirects, uint256 teamCount)"
 ];
 
 const ERC20_ABI = ["function approve(address spender, uint256 amount) public returns (bool)", "function allowance(address owner, address spender) public view returns (uint256)"];
@@ -41,72 +35,75 @@ const ERC20_ABI = ["function approve(address spender, uint256 amount) public ret
 const calculateGlobalROI = () => 0.90;
 
 // --- 1. AUTO-FILL LOGIC ---
-function checkReferralURL() {
+// --- UPDATED REFERRAL LOGIC ---
+async function checkReferralURL() {
     const urlParams = new URLSearchParams(window.location.search);
-    const refName = urlParams.get('ref');
+    const refParam = urlParams.get('ref'); // Ye username ya address dono ho sakta hai
     const refField = document.getElementById('reg-referrer');
-    if (refName && refField) {
-        refField.value = refName.trim();
-        console.log("Referral auto-filled:", refName);
+    
+    if (refParam && refField) {
+        // Logic: Agar ye valid Ethereum address format mein hai, toh seedha set kar do
+        if (ethers.utils.isAddress(refParam)) {
+            refField.value = refParam.trim();
+        } else {
+            // Agar ye username hai, toh contract se uska address find karo
+            // NOTE: Iske liye contract mein 'usernames[username] -> address' mapping honi chahiye
+            try {
+                const address = await contract.usernameToAddress(refParam);
+                refField.value = address;
+            } catch (e) {
+                console.log("Username not found, using as is:", refParam);
+                refField.value = refParam.trim();
+            }
+        }
+        console.log("Referral processed:", refField.value);
     }
 }
 
 // --- INITIALIZATION ---
 async function init() {
     checkReferralURL();
-    
     const bscTestnetRPC = "https://data-seed-prebsc-1-s1.binance.org:8545/";
     const savedAddr = localStorage.getItem('userAddress');
-    const isIndexPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
 
     try {
         if (window.ethereum) {
-           
             provider = new ethers.providers.Web3Provider(window.ethereum, "any");
             
-            window.contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-            contract = window.contract;
-
-            // --- CONDITION START ---
-            if (isIndexPage) {
-                
-                if (savedAddr) {
-                    await setupReadOnly(bscTestnetRPC, savedAddr);
-                }
-            } else {
-               
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length > 0) {
-                    const address = accounts[0];
-                    localStorage.setItem('userAddress', address);
-                    signer = provider.getSigner();
-                    window.signer = signer;
-                    window.contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-                    contract = window.contract;
-                    await setupApp(address);
-                } else if (savedAddr) {
-                    await setupReadOnly(bscTestnetRPC, savedAddr);
-                }
+            // Sabse pehle network check karo
+            const network = await provider.getNetwork();
+            if (network.chainId !== TESTNET_CHAIN_ID) {
+                console.warn("Wrong Network, please switch to 97");
             }
-            // --- CONDITION END ---
 
-       
+            contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length > 0) {
+                signer = provider.getSigner();
+                // Contract ko Signer ke sath re-initialize karo
+                contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                await setupApp(accounts[0]);
+            } else if (savedAddr) {
+                await setupReadOnly(bscTestnetRPC, savedAddr);
+            }
+
+            // Listeners
             window.ethereum.on('chainChanged', () => window.location.reload());
             window.ethereum.on('accountsChanged', (accs) => {
                 if (accs.length === 0) localStorage.removeItem('userAddress');
                 else localStorage.setItem('userAddress', accs[0]);
                 window.location.reload();
             });
-
         } else {
-           
+            // Agar MetaMask/Trust Wallet nahi hai
             await setupReadOnly(bscTestnetRPC, savedAddr);
         }
-    } catch (error) { 
+    } catch (error) {
         console.error("Init Error:", error);
-        if (savedAddr) await setupReadOnly(bscTestnetRPC, savedAddr);
     }
 }
+
 
 async function setupReadOnly(rpcUrl, forcedAddress = null) {
     console.log("Mode: RPC/Memory Data Loading...");
@@ -131,17 +128,18 @@ async function setupReadOnly(rpcUrl, forcedAddress = null) {
 window.handleDeposit = async function() {
     const amountInput = document.getElementById('deposit-amount');
     const depositBtn = document.getElementById('deposit-btn');
+    // Referrer address input ya URL se le rahe hain
+    const referrer = document.getElementById('reg-referrer')?.value || "0x0000000000000000000000000000000000000000";
     
-    if (!amountInput || !amountInput.value || amountInput.value < 10) {
-        return alert("Min 10 USDT required!");
+    // Min 100 BLX requirement (Aapke naye contract ke hisaab se)
+    if (!amountInput || !amountInput.value || amountInput.value < 100) {
+        return alert("Min 100 BLX required!");
     }
 
     try {
-       
         let activeSigner = window.signer || signer;
         let activeContract = window.contract || contract;
 
-        
         if (!activeSigner || !window.ethereum) {
             if (!window.ethereum) return alert("Please use Trust Wallet or MetaMask browser!");
             
@@ -160,18 +158,19 @@ window.handleDeposit = async function() {
         const amountInWei = ethers.utils.parseUnits(amountInput.value.toString(), 18);
         const userAddress = await activeSigner.getAddress();
         
-        const usdt = new ethers.Contract(USDT_TOKEN_ADDRESS, ERC20_ABI, activeSigner);
+        // Token contract (BLX)
+        const blxToken = new ethers.Contract(BLX_TOKEN_ADDRESS, ERC20_ABI, activeSigner);
 
-        // 1. Approve Check
-        const allowance = await usdt.allowance(userAddress, CONTRACT_ADDRESS);
+        // 1. Approve Check (Contract Address ko approve kar rahe hain)
+        const allowance = await blxToken.allowance(userAddress, CONTRACT_ADDRESS);
         if (allowance.lt(amountInWei)) {
-            const txApp = await usdt.approve(CONTRACT_ADDRESS, amountInWei);
+            const txApp = await blxToken.approve(CONTRACT_ADDRESS, amountInWei);
             await txApp.wait();
         }
 
-        // 2. Deposit
+        // 2. Deposit (Stake call: amount, withBurn=true, referrer)
         depositBtn.innerText = "SIGNING...";
-        const tx = await activeContract.deposit(amountInWei);
+        const tx = await activeContract.stake(amountInWei, true, referrer);
         
         depositBtn.innerText = "DEPOSITING...";
         await tx.wait();
@@ -397,22 +396,21 @@ window.handleLogin = async function() {
     }
 }
 window.handleRegister = async function() {
-    const userField = document.getElementById('reg-username');
+    // Contract mein sirf 'referrer' address chahiye, 'username' ki zarurat nahi hai
     const refField = document.getElementById('reg-referrer');
-    const regBtn = event.target; // Button ko pakadne ke liye
+    const regBtn = event.target; 
     
-    if (!userField || !refField) return;
+    if (!refField) return;
 
-    const username = userField.value.trim();
     const referrer = refField.value.trim();
 
-    if (!username || !referrer) {
-        alert("Username and Referrer are required!");
+    // Referrer address check
+    if (!referrer || !ethers.utils.isAddress(referrer)) {
+        alert("Valid Referrer Address is required!");
         return;
     }
 
     try {
-      
         let activeSigner = window.signer || signer;
         let activeContract = window.contract || contract;
 
@@ -428,13 +426,13 @@ window.handleRegister = async function() {
             window.contract = activeContract;
         }
 
-        // ---  NETWORK AUTO-SWITCH (BSC Testnet: 97) ---
+        // --- NETWORK AUTO-SWITCH (BSC Testnet: 97) ---
         const network = await activeSigner.provider.getNetwork();
         if (network.chainId !== 97) {
             try {
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x61' }], // 0x61 = 97
+                    params: [{ chainId: '0x61' }],
                 });
             } catch (switchError) {
                 alert("Please switch your wallet to BSC Testnet manually!");
@@ -443,21 +441,17 @@ window.handleRegister = async function() {
         }
 
         regBtn.disabled = true;
-        regBtn.innerText = "CHECKING...";
+        regBtn.innerText = "REGISTERING...";
 
+        console.log("Registering with referrer:", referrer);
         
-        console.log("Registering username:", username);
-        
-        // Manual gas limit for Trust Wallet stability
-        const tx = await activeContract.register(username, referrer, {
-            gasLimit: 500000 
+        // Naye contract ke hisaab se: register(address referrer)
+        const tx = await activeContract.register(referrer, {
+            gasLimit: 300000 
         });
 
         regBtn.innerText = "CONFIRMING...";
-        console.log("Tx Hash:", tx.hash);
-
         await tx.wait();
-        
         
         localStorage.removeItem('manualLogout');
         localStorage.setItem('userAddress', await activeSigner.getAddress()); 
@@ -473,7 +467,7 @@ window.handleRegister = async function() {
         if (err.code === 4001 || err.message.includes("user rejected")) {
             alert("Transaction rejected by user.");
         } else {
-            alert("Error: " + (err.reason || "Username might be taken or balance is low."));
+            alert("Error: " + (err.reason || "Registration failed. Check address or balance."));
         }
     }
 }
@@ -544,11 +538,11 @@ window.showHistory = async function(category) {
     
     container.innerHTML = `<div class="p-10 text-center text-yellow-500 italic animate-pulse">Fetching ${category.toUpperCase()} Records...</div>`;
   
+    // Naye contract ke categories ke hisaab se mapping
     const typeMap = {
-        'deposit': ['DEPOSIT'],
-        'compounding': ['REINVEST'],
-        'withdrawal': ['WITHDRAW', 'PRINCIPAL_WITHDRAW'],
-        'income': ['ROI_INCOME', 'LEVEL_INCOME', 'RANK_INCOME']
+        'deposit': ['STAKE'], // Contract mein event 'StakeCreated' hai
+        'withdrawal': ['WITHDRAW'],
+        'income': ['ROI'] // Contract mein incomeType 'ROI' aayega
     };
 
     const allowedTypes = typeMap[category] || [];
@@ -562,13 +556,12 @@ window.showHistory = async function(category) {
     container.innerHTML = logs.map(item => `
         <div class="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 flex justify-between items-center hover:bg-white/10 transition-all">
             <div>
-                <h4 class="font-bold ${item.color}">${item.type.replace('_', ' ')}</h4>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest">${item.detail}</p>
+                <h4 class="font-bold ${item.color}">${item.type}</h4>
                 <p class="text-[10px] text-gray-500 mt-1">${item.date} | ${item.time}</p>
             </div>
             <div class="text-right">
                 <span class="text-lg font-black text-white">${item.amount}</span>
-                <p class="text-[10px] text-gray-500 font-bold">USDT</p>
+                <p class="text-[10px] text-gray-500 font-bold">BLX</p>
             </div>
         </div>
     `).join('');
@@ -576,47 +569,32 @@ window.showHistory = async function(category) {
 
 window.fetchBlockchainHistory = async function(allowedTypes) {
     try {
-        // --- TRUST WALLET FIX ---
         let address = localStorage.getItem('userAddress');
+        if (!address) return [];
+
+        const activeContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
         
-        if (!address && window.signer) {
-            address = await window.signer.getAddress();
-        }
-
-        if (!address || address === "undefined") {
-            console.log("History Error: No address found yet");
-            return [];
-        }
-
-        const activeContract = window.contract || contract;
-        if (!activeContract) return [];
-
-        const rawHistory = await activeContract.getUserHistory(address);
+        // Contract se history fetch karo
+        const rawHistory = await activeContract.getIncomeHistory(address);
         
         return rawHistory
-            .filter(item => {
-                const txType = item.txType.toUpperCase();
-                return allowedTypes.includes(txType);
-            }) 
+            .filter(item => allowedTypes.includes(item.incomeType.toUpperCase()))
             .map(item => {
-                const txType = item.txType.toUpperCase();
                 const dt = new Date(item.timestamp.toNumber() * 1000);
                 
-                let colorClass = 'text-cyan-400';
-                if(txType.includes('INCOME')) colorClass = 'text-green-400';
-                if(txType.includes('WITHDRAW')) colorClass = 'text-red-400';
+                let colorClass = 'text-green-400';
+                if(item.incomeType.toUpperCase() === 'WITHDRAW') colorClass = 'text-red-400';
 
                 return {
-                    type: txType,
+                    type: item.incomeType,
                     amount: format(item.amount),
-                    detail: item.detail,
                     date: dt.toLocaleDateString(),
                     time: dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
                     ts: item.timestamp.toNumber(),
                     color: colorClass
                 };
             })
-            .sort((a,b) => b.ts - a.ts); // Newest transactions first
+            .sort((a,b) => b.ts - a.ts);
     } catch (e) { 
         console.error("History Fetch Error:", e);
         return []; 
@@ -624,8 +602,6 @@ window.fetchBlockchainHistory = async function(allowedTypes) {
 }
 async function fetchAllData(address) {
     try {
-        // --- TRUST WALLET CONNECTION FIX ---
-        
         const activeContract = window.contract || contract;
         
         if (!activeContract) {
@@ -633,47 +609,32 @@ async function fetchAllData(address) {
             return;
         }
 
-    
-        const [user, extra, live] = await Promise.all([
+        // 1. Contract se data fetch karo
+        const [user, stats] = await Promise.all([
             activeContract.users(address), 
-            activeContract.usersExtra(address), 
-            activeContract.getLiveBalance(address)
+            activeContract.getUserStats(address) 
+            // stats[0]: totalStaked, stats[1]: totalIncome, stats[2]: totalWithdrawn, stats[3]: directs, stats[4]: teamCount
         ]);
 
-        // --- DASHBOARD BASIC DATA ---
-        updateText('username-display', user.username || "USER"); 
+        const roiEarnings = await activeContract.getIncomeByType(address, "ROI");
+
+        // --- DASHBOARD DATA UPDATES ---
+        // Contract mein 'username' nahi hai, toh address show karenge
+        updateText('username-display', "USER"); 
         updateText('user-address', address.substring(0, 6) + "..." + address.substring(38));
-        updateText('total-deposit', format(user.totalDeposited));
-        updateText('active-deposit', format(user.totalActiveDeposit));
-        updateText('total-earned', format(user.totalEarnings));
-        updateText('total-withdrawn', format(user.totalWithdrawn));
         
-        // Income breakdown display
-        updateText('level-earning', format(extra.totalEarnedLevel)); 
-        updateText('rank-earning', format(extra.totalEarnedRank)); 
- updateText('roi-earning', format(extra.totalEarnedROI)); 
-        // --- THE ULTIMATE FIX ---
-        const totalWithdrawable = parseFloat(format(live));
-        const activeAmt = parseFloat(format(user.totalActiveDeposit));
-
-        // UI Updates - Direct live value use (SAME LOGIC)
-        updateText('withdrawable', totalWithdrawable.toFixed(2));    
-        updateText('compounding-balance', totalWithdrawable.toFixed(2));
-        updateText('cap-balance', format(user.totalActiveDeposit));
-        updateText('active-deposit-cp', format(user.totalActiveDeposit));
+        updateText('total-deposit', format(stats[0])); // totalStaked
+        updateText('active-deposit', format(stats[0])); // Contract mein active = totalStaked
+        updateText('total-earned', format(stats[1]));  // totalIncome
+        updateText('total-withdrawn', format(stats[2])); // totalWithdrawn
         
-updateText('roi-earning', format(extra.totalEarnedROI)); 
-updateText('team-count', extra.teamCount || "0");         
-updateText('directs-count', extra.directsCount || "0");   
+        // Income breakdown
+        updateText('roi-earning', format(roiEarnings)); 
+        updateText('team-count', stats[4].toString()); // teamCount
+        updateText('directs-count', stats[3].toString()); // activeDirects
 
-        // Daily ROI Projection (0.9%)
-        updateText('projected-return', (activeAmt * 0.009).toFixed(2));
-
-        // --- RANK & STATUS ---
-        // getRankName ko bhi activeContract se call kar rahe hain (Fix for Trust Wallet)
-        const rankName = await activeContract.getRankName(extra.rank);
-        updateText('rank-display', rankName);
-
+        // --- STATUS LOGIC ---
+        const activeAmt = parseFloat(format(stats[0]));
         const statusText = document.getElementById('main-status-text');
         const statusBadge = document.getElementById('status-badge');
         
@@ -694,7 +655,7 @@ updateText('directs-count', extra.directsCount || "0");
         // --- REFERRAL URL ---
         const baseUrl = window.location.origin + window.location.pathname.replace('index1.html', 'register.html');
         const refField = document.getElementById('refURL');
-        if(refField) refField.value = `${baseUrl}?ref=${user.username}`;
+        if(refField) refField.value = `${baseUrl}?ref=${address}`; // Username ki jagah address use ho raha hai
 
     } catch (err) { 
         console.error("Data Sync Error:", err); 
