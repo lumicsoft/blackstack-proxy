@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register | Earn BNB</title>
+    <title>Register | Blackstax</title>
 
     <link rel="stylesheet" href="style1.css">
     
@@ -13,7 +13,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Plus+Jakarta+Sans:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Unique input style for Register page only */
         .input-field { 
             background: rgba(255,255,255,0.05); 
             border: 1px solid rgba(255,255,255,0.1); 
@@ -35,7 +34,6 @@
     <script src="components.js"></script>
 
     <main class="flex-grow flex items-center justify-center px-6 py-20 relative overflow-hidden z-10">
-        
         <div class="premium-card w-full max-w-md">
             <div class="inner-content !block p-8 rounded-3xl">
                 <div class="text-center mb-8">
@@ -46,15 +44,17 @@
                 </div>
 
                 <div class="space-y-6">
+                    <!-- Username field kept for UI/Display purposes -->
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Your Username</label>
-                        <input type="text" id="reg-username" placeholder="Above 3 characters username" class="input-field orbitron text-xs">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Username (Display)</label>
+                        <input type="text" id="reg-username" placeholder="Your display name" class="input-field orbitron text-xs">
                     </div>
 
+                    <!-- Contract needs Address, not Username -->
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Referrer ID</label>
-                        <input type="text" id="reg-referrer" placeholder="Referrer username" class="input-field orbitron text-xs">
-                        <p id="ref-status" class="text-[9px] mt-2 text-yellow-500 hidden italic uppercase font-bold animate-pulse">Referral Active</p>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Referrer Wallet Address</label>
+                        <input type="text" id="reg-referrer" placeholder="0x..." class="input-field orbitron text-xs">
+                        <p id="ref-status" class="text-[9px] mt-2 text-yellow-500 hidden italic uppercase font-bold animate-pulse">Referral Address Active</p>
                     </div>
 
                     <button onclick="initiateRegister()" id="reg-btn" class="btn-gold-pro w-full py-4 orbitron font-black tracking-widest rounded-xl">
@@ -72,16 +72,19 @@
     <script src="web3-handler.js"></script>
 
     <script>
-        // Referral Auto-fill Logic
+        // Referral Auto-fill Logic: Works for addresses
         window.addEventListener('load', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const ref = urlParams.get('ref');
             if (ref) {
                 const el = document.getElementById('reg-referrer');
-                el.value = ref; 
-                el.readOnly = true; 
-                el.style.opacity = "0.6";
-                document.getElementById('ref-status').classList.remove('hidden');
+                // Validation check for address
+                if (ethers.utils.isAddress(ref)) {
+                    el.value = ref; 
+                    el.readOnly = true; 
+                    el.style.opacity = "0.6";
+                    document.getElementById('ref-status').classList.remove('hidden');
+                }
             }
         });
 
