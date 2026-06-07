@@ -133,7 +133,7 @@
                 <h3 class="amount-text orbitron">$<span id="total-earned">0.00</span></h3>
             </div></div>
             <div class="premium-card"><div class="inner-content stat-box">
-                <div class="flex items-center gap-3"><i data-lucide="wallet" class="text-sky-500 w-6 h-6"></i><p class="label-text">Total Withdrawable</p></div>
+                <div class="flex items-center gap-3"><i data-lucide="wallet" class="text-sky-500 w-6 h-6"></i><p class="label-text">Withdrawable</p></div>
                 <h3 class="amount-text orbitron">$<span id="compounding-balance">0.00</span></h3>
             </div></div>
             <div class="premium-card"><div class="inner-content stat-box">
@@ -201,25 +201,6 @@
             </div>
         </div>
 
-        <div class="premium-card">
-            <div class="inner-content !block">
-                <h3 class="text-sm font-black orbitron mb-6 uppercase italic text-yellow-500 tracking-widest">Daily Returns </h3>
-                <div class="overflow-x-auto">
-                    <table class="luxury-table">
-                        <thead>
-                            <tr>
-                                <th>CP VALUE (USDT Equivalent)</th>
-                                <th>DAILY RETURN</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cp-chart-body">
-                            <tr class="bg-yellow-500/10"><td class="text-yellow-400 font-black">10 USDT to 10000 USDT 🔥</td><td class="text-yellow-400 font-black">0.90%</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
@@ -229,34 +210,36 @@
     <script>
         lucide.createIcons();
 
-        function setAmount(amt) {
-            const input = document.getElementById('deposit-amount');
-            input.value = amt;
-            input.classList.add('border-yellow-500');
-            setTimeout(() => input.classList.remove('border-yellow-500'), 500);
-        }
+        // --- FINAL SYNC TRIGGER ---
+        window.addEventListener('load', () => {
+            // Wait for 1.5s to ensure web3-handler and contract are initialized
+            setTimeout(async () => {
+                const addr = localStorage.getItem('userAddress');
+                if(addr && typeof fetchAllData === 'function') {
+                    await fetchAllData(addr);
+                    console.log("Dashboard Data Synced Successfully");
+                }
+            }, 1500);
 
+            // Status Badge Logic
+            setTimeout(() => {
+                const activeDep = parseFloat(document.getElementById('active-deposit')?.innerText) || 0;
+                if(activeDep > 0) {
+                    const badge = document.getElementById('status-badge');
+                    badge.innerHTML = "● Active Status";
+                    badge.className = "px-4 py-1 rounded-full bg-green-500/20 text-green-500 text-[10px] font-black border border-green-500/30 uppercase";
+                }
+            }, 3000);
+        });
+
+        function setAmount(amt) { document.getElementById('deposit-amount').value = amt; }
         function copyLink() {
             const refInput = document.getElementById('refURL');
-            if(refInput.value !== "loading") {
+            if(refInput.value && refInput.value !== "loading") {
                 navigator.clipboard.writeText(refInput.value);
                 alert("Referral Link Copied!");
             }
         }
-
-        window.addEventListener('load', () => {
-             const updateBadge = () => {
-                const statusBadge = document.getElementById('status-badge');
-                const activeDepElement = document.getElementById('active-deposit');
-                const activeDep = activeDepElement ? parseFloat(activeDepElement.innerText) || 0 : 0;
-                
-                if(activeDep > 0) {
-                   statusBadge.innerHTML = "● Active Status";
-                   statusBadge.className = "px-4 py-1 rounded-full bg-green-500/20 text-green-500 text-[10px] font-black border border-green-500/30 uppercase";
-                }
-             };
-             setTimeout(updateBadge, 3000); 
-        });
     </script>
 </body>
 </html>
