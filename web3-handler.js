@@ -2,7 +2,7 @@ let provider, signer, contract;
 
 // --- CONFIGURATION ---
 const CONTRACT_ADDRESS = "0xC43b35712b32C44b390059E42538E817c7efB6EF"; 
-const USDT_TOKEN_ADDRESS = "0x0C978102175c6b9f90Dd53b249C1E5EdbF82DC3A"; // BSC USDT
+const BLX_TOKEN_ADDRESS = "0x0C978102175c6b9f90Dd53b249C1E5EdbF82DC3A"; // अपना सही टोकन एड्रेस डालें // BSC USDT
 const TESTNET_CHAIN_ID = 97; 
 
 // --- RANK CONFIG (Star1 to Master King) ---
