@@ -573,28 +573,36 @@ async function fetchAllData(address) {
         const activeContract = window.contract || contract;
         if (!activeContract) return;
 
-        // Aapke contract ke 'users' aur 'getUserStats' function ka use
-        const user = await activeContract.users(address);
+        // Contract call
         const stats = await activeContract.getUserStats(address); 
         const roi = await activeContract.getIncomeByType(address, "ROI");
+        const level = await activeContract.getIncomeByType(address, "LEVEL");
+        const rank = await activeContract.getIncomeByType(address, "RANK");
 
+        // UI Update (Matching IDs)
         updateText('total-deposit', format(stats[0]));
+        updateText('active-deposit', format(stats[0]));
         updateText('total-earned', format(stats[1]));
         updateText('total-withdrawn', format(stats[2]));
         updateText('team-count', stats[4].toString());
         updateText('directs-count', stats[3].toString());
+        
+        // Income Types
         updateText('roi-earning', format(roi));
+        updateText('level-earning', format(level));
+        updateText('rank-earning', format(rank));
 
-        // Status Logic
-        const activeAmt = parseFloat(format(stats[0]));
-        const statusText = document.getElementById('main-status-text');
-        if(statusText) {
-            statusText.innerText = activeAmt > 0 ? "ACTIVE" : "INACTIVE";
-            statusText.className = activeAmt > 0 ? "text-green-500" : "text-red-500";
-        }
-    } catch (err) { console.error("Data Sync Error:", err); }
+        // Withdrawable Calculation
+        const withdrawable = parseFloat(format(stats[1])) - parseFloat(format(stats[2]));
+        updateText('compounding-balance', withdrawable.toFixed(2));
+        updateText('cap-balance', format(stats[0]));
+        updateText('active-deposit-cp', format(stats[0]));
+
+        console.log("Dashboard Data Loaded Successfully!");
+    } catch (err) { 
+        console.error("Data Sync Error:", err); 
+    }
 }
-
 // --- LEADERSHIP DATA (Corrected for RPC Mode) ---
 async function fetchLeadershipData(address) {
     try {
