@@ -495,28 +495,29 @@ async function setupApp(address) {
     localStorage.setItem('userAddress', address);
     
     const activeContract = window.contract || contract;
-    const userData = await activeContract.users(address); // 'exists' check
+    const userData = await activeContract.users(address); // Ye 'exists' return karta hai
     const path = window.location.pathname;
 
-    console.log("User Exists Status:", userData.exists);
+    console.log("User Exists:", userData.exists);
 
     // Redirect Logic
-    if (userData.exists === false) {
+    if (!userData.exists) {
         if (!path.includes('register.html')) {
             window.location.href = "register.html";
             return;
         }
     } else {
-        if (path.includes('register.html') || path.includes('login.html')) {
+        if (path.includes('register.html')) {
             window.location.href = "index1.html";
             return;
         }
     }
-    updateNavbar(address);
-    if (path.includes('index1.html')) fetchAllData(address);
-    if (path.includes('leadership.html')) fetchLeadershipData(address);
-}
 
+    updateNavbar(address);
+    showLogoutIcon(address);
+
+    if (path.includes('index1.html')) fetchAllData(address);
+}
 // --- HISTORY LOGIC ---
 window.showHistory = async function(category) {
     const container = document.getElementById('history-container');
