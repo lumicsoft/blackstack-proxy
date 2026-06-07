@@ -490,45 +490,30 @@ function showLogoutIcon(address) {
 }
 
 async function setupApp(address) {
-    if (!address || address === "undefined") return;
-    
+    if (!address) return;
     localStorage.setItem('userAddress', address);
-    const network = await provider.getNetwork();
-    if (network.chainId !== TESTNET_CHAIN_ID) { 
-        alert("Please switch your wallet to BSC Testnet (Chain 97)!"); 
-        return; 
-    }
-
+    
     const activeContract = window.contract || contract;
-    const userData = await activeContract.users(address);
+    const userData = await activeContract.users(address); // 'exists' check
     const path = window.location.pathname;
 
-    // Registration Logic
-    if (!userData.registered) {
-        if (!path.includes('register.html') && !path.includes('login.html')) {
-            window.location.href = "register.html"; 
-            return; 
+    console.log("User Exists Status:", userData.exists);
+
+    // Redirect Logic
+    if (userData.exists === false) {
+        if (!path.includes('register.html')) {
+            window.location.href = "register.html";
+            return;
         }
     } else {
-        if (path.includes('register.html') || path.includes('login.html') || path.endsWith('/') || path.endsWith('index.html')) {
+        if (path.includes('register.html') || path.includes('login.html')) {
             window.location.href = "index1.html";
             return;
         }
     }
-
     updateNavbar(address);
-    showLogoutIcon(address); 
-
-    if (path.includes('index1.html')) {
-        setTimeout(() => fetchAllData(address), 300);
-        start8HourCountdown(); 
-    }
-    if (path.includes('leadership.html')) {
-        setTimeout(() => fetchLeadershipData(address), 300);
-    }
-    if (path.includes('history.html')) {
-        setTimeout(() => window.showHistory('deposit'), 300);
-    }
+    if (path.includes('index1.html')) fetchAllData(address);
+    if (path.includes('leadership.html')) fetchLeadershipData(address);
 }
 
 // --- HISTORY LOGIC ---
@@ -603,93 +588,43 @@ window.fetchBlockchainHistory = async function(allowedTypes) {
 async function fetchAllData(address) {
     try {
         const activeContract = window.contract || contract;
-        
-        if (!activeContract) {
-            console.error("Contract not ready yet!");
-            return;
-        }
+        if (!activeContract) return;
 
-        // 1. Contract se data fetch karo
-        const [user, stats] = await Promise.all([
-            activeContract.users(address), 
-            activeContract.getUserStats(address) 
-            // stats[0]: totalStaked, stats[1]: totalIncome, stats[2]: totalWithdrawn, stats[3]: directs, stats[4]: teamCount
-        ]);
+        // Aapke contract ke 'users' aur 'getUserStats' function ka use
+        const user = await activeContract.users(address);
+        const stats = await activeContract.getUserStats(address); 
+        const roi = await activeContract.getIncomeByType(address, "ROI");
 
-        const roiEarnings = await activeContract.getIncomeByType(address, "ROI");
+        updateText('total-deposit', format(stats[0]));
+        updateText('total-earned', format(stats[1]));
+        updateText('total-withdrawn', format(stats[2]));
+        updateText('team-count', stats[4].toString());
+        updateText('directs-count', stats[3].toString());
+        updateText('roi-earning', format(roi));
 
-        // --- DASHBOARD DATA UPDATES ---
-        // Contract mein 'username' nahi hai, toh address show karenge
-        updateText('username-display', "USER"); 
-        updateText('user-address', address.substring(0, 6) + "..." + address.substring(38));
-        
-        updateText('total-deposit', format(stats[0])); // totalStaked
-        updateText('active-deposit', format(stats[0])); // Contract mein active = totalStaked
-        updateText('total-earned', format(stats[1]));  // totalIncome
-        updateText('total-withdrawn', format(stats[2])); // totalWithdrawn
-        
-        // Income breakdown
-        updateText('roi-earning', format(roiEarnings)); 
-        updateText('team-count', stats[4].toString()); // teamCount
-        updateText('directs-count', stats[3].toString()); // activeDirects
-
-        // --- STATUS LOGIC ---
+        // Status Logic
         const activeAmt = parseFloat(format(stats[0]));
         const statusText = document.getElementById('main-status-text');
-        const statusBadge = document.getElementById('status-badge');
-        
-        if (activeAmt > 0) {
-            if(statusText) { statusText.innerText = "ACTIVE"; statusText.className = "text-xs font-black orbitron text-green-500"; }
-            if(statusBadge) { 
-                statusBadge.innerHTML = "● Active Status"; 
-                statusBadge.className = "px-4 py-1 rounded-full bg-green-500/20 text-green-500 text-[10px] font-black border border-green-500/30 uppercase"; 
-            }
-        } else {
-            if(statusText) { statusText.innerText = "INACTIVE"; statusText.className = "text-xs font-black orbitron text-red-500"; }
-            if(statusBadge) {
-                statusBadge.innerHTML = "● Inactive";
-                statusBadge.className = "px-4 py-1 rounded-full bg-red-500/20 text-red-500 text-[10px] font-black border border-red-500/30 uppercase";
-            }
+        if(statusText) {
+            statusText.innerText = activeAmt > 0 ? "ACTIVE" : "INACTIVE";
+            statusText.className = activeAmt > 0 ? "text-green-500" : "text-red-500";
         }
-
-        // --- REFERRAL URL ---
-        const baseUrl = window.location.origin + window.location.pathname.replace('index1.html', 'register.html');
-        const refField = document.getElementById('refURL');
-        if(refField) refField.value = `${baseUrl}?ref=${address}`; // Username ki jagah address use ho raha hai
-
-    } catch (err) { 
-        console.error("Data Sync Error:", err); 
-    }
+    } catch (err) { console.error("Data Sync Error:", err); }
 }
+
 // --- LEADERSHIP DATA (Corrected for RPC Mode) ---
 async function fetchLeadershipData(address) {
     try {
         const activeContract = window.contract || contract;
         if (!activeContract) return;
 
-        const [user, extra] = await Promise.all([
-            activeContract.users(address), 
-            activeContract.usersExtra(address)
-        ]);
-
-        const teamActiveVol = parseFloat(ethers.utils.formatUnits(user.teamActiveDeposit, 18));
-        const teamTotalVol = parseFloat(ethers.utils.formatUnits(user.teamTotalDeposit, 18));
-        const rankRewards = parseFloat(ethers.utils.formatUnits(extra.rewardsRank, 18));
-
-        updateText('team-active-deposit', teamActiveVol.toFixed(2));
-        updateText('team-total-deposit', teamTotalVol.toFixed(2));
-        updateText('rank-reward-available', rankRewards.toFixed(2));
-        updateText('current-team-count', extra.teamCount);
-        updateText('directs-quali', extra.directsQuali);
-        updateText('current-team-volume', teamActiveVol.toFixed(0));
-
-        if (typeof updateRankUI === "function") {
-            updateRankUI(extra, teamActiveVol);
-        }
-    } catch (err) { 
-        console.error("Leadership Data Error:", err); 
-    }
-
+        const stats = await activeContract.getUserStats(address);
+        // stats: totalStaked, totalIncome, totalWithdrawn, activeDirects, teamCount
+        
+        updateText('current-team-count', stats[4].toString());
+        updateText('directs-quali', stats[3].toString());
+        updateText('team-total-deposit', format(stats[0]));
+    } catch (err) { console.error("Leadership Data Error:", err); }
 }
 function start8HourCountdown() {
     const timerElement = document.getElementById('next-timer');
