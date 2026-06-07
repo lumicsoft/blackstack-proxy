@@ -357,43 +357,25 @@ window.handleCapitalWithdraw = async function() {
 window.handleLogin = async function() {
     try {
         if (!window.ethereum) return alert("Please install Trust Wallet or MetaMask!");
-
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        if (accounts.length === 0) return;
         const userAddress = accounts[0]; 
 
         const tempProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
-        const { chainId } = await tempProvider.getNetwork();
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, tempProvider.getSigner());
 
-        // Check if on BSC Testnet (97)
-        if (chainId !== TESTNET_CHAIN_ID) {
-            alert("Please switch your wallet to BSC Testnet (Chain 97)!");
-            return;
-        }
-
-        const tempSigner = tempProvider.getSigner();
-        const tempContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, tempSigner);
-
-        provider = tempProvider;
-        signer = tempSigner;
-        contract = tempContract;
-
+        // Contract call
         const userData = await contract.users(userAddress);
 
-        if (userData.registered === true) {
+        // FIX: userData.exists check karein (contract ke struct ke hisaab se)
+        if (userData.exists === true) { 
             localStorage.setItem('userAddress', userAddress);
-            localStorage.removeItem('manualLogout');
-            
-            if(typeof showLogoutIcon === "function") showLogoutIcon(userAddress);
-            
             window.location.href = "index1.html";
         } else {
-            alert("User Are Not registered ! Plz  Registration...");
+            alert("Not registered! Redirecting to Registration...");
             window.location.href = "register.html";
         }
     } catch (err) { 
         console.error("Login Error:", err);
-        alert("Login failed! Make sure your wallet is connected to BSC Testnet."); 
     }
 }
 window.handleRegister = async function() {
@@ -495,12 +477,12 @@ async function setupApp(address) {
     localStorage.setItem('userAddress', address);
     
     const activeContract = window.contract || contract;
-    const userData = await activeContract.users(address); // Ye 'exists' return karta hai
+    const userData = await activeContract.users(address); 
     const path = window.location.pathname;
 
-    console.log("User Exists:", userData.exists);
+    console.log("User Exists in Contract:", userData.exists);
 
-    // Redirect Logic
+    // FIX: userData.exists check karein
     if (!userData.exists) {
         if (!path.includes('register.html')) {
             window.location.href = "register.html";
@@ -515,7 +497,6 @@ async function setupApp(address) {
 
     updateNavbar(address);
     showLogoutIcon(address);
-
     if (path.includes('index1.html')) fetchAllData(address);
 }
 // --- HISTORY LOGIC ---
