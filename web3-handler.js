@@ -129,10 +129,8 @@ async function setupReadOnly(rpcUrl, forcedAddress = null) {
 window.handleDeposit = async function() {
     const amountInput = document.getElementById('deposit-amount');
     const depositBtn = document.getElementById('deposit-btn');
-    // Referrer address input ya URL se le rahe hain
     const referrer = document.getElementById('reg-referrer')?.value || "0x0000000000000000000000000000000000000000";
     
-    // Min 100 BLX requirement (Aapke naye contract ke hisaab se)
     if (!amountInput || !amountInput.value || amountInput.value < 100) {
         return alert("Min 100 BLX required!");
     }
@@ -143,12 +141,10 @@ window.handleDeposit = async function() {
 
         if (!activeSigner || !window.ethereum) {
             if (!window.ethereum) return alert("Please use Trust Wallet or MetaMask browser!");
-            
             const tempProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
             await tempProvider.send("eth_requestAccounts", []);
             activeSigner = tempProvider.getSigner();
             activeContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, activeSigner);
-                        
             window.signer = activeSigner;
             window.contract = activeContract;
         }
@@ -158,20 +154,30 @@ window.handleDeposit = async function() {
 
         const amountInWei = ethers.utils.parseUnits(amountInput.value.toString(), 18);
         const userAddress = await activeSigner.getAddress();
-        
-        // Token contract (BLX)
         const blxToken = new ethers.Contract(BLX_TOKEN_ADDRESS, ERC20_ABI, activeSigner);
 
-        // 1. Approve Check (Contract Address ko approve kar rahe hain)
+        // 1. APPROVE के लिए गैस कैलकुलेशन
+        const approveGas = await blxToken.estimateGas.approve(CONTRACT_ADDRESS, amountInWei);
+        // 30% Buffer जोड़ना: (gas * 1.3)
+        const approveGasWithBuffer = approveGas.mul(130).div(100);
+
         const allowance = await blxToken.allowance(userAddress, CONTRACT_ADDRESS);
         if (allowance.lt(amountInWei)) {
-            const txApp = await blxToken.approve(CONTRACT_ADDRESS, amountInWei);
+            const txApp = await blxToken.approve(CONTRACT_ADDRESS, amountInWei, { gasLimit: approveGasWithBuffer });
             await txApp.wait();
         }
 
-        // 2. Deposit (Stake call: amount, withBurn=true, referrer)
+        // 2. DEPOSIT (stake) के लिए गैस कैलकुलेशन
         depositBtn.innerText = "SIGNING...";
-        const tx = await activeContract.stake(amountInWei, true, referrer);
+        
+        // estimateGas का उपयोग करके सही गैस पता करें
+        const depositGas = await activeContract.estimateGas.stake(amountInWei, true, referrer);
+        // 30% Buffer जोड़ना
+        const depositGasWithBuffer = depositGas.mul(130).div(100);
+
+        const tx = await activeContract.stake(amountInWei, true, referrer, {
+            gasLimit: depositGasWithBuffer
+        });
         
         depositBtn.innerText = "DEPOSITING...";
         await tx.wait();
@@ -181,12 +187,13 @@ window.handleDeposit = async function() {
 
     } catch (err) {
         console.error("Deposit Error:", err);
-        alert("Error: " + (err.reason || err.message || "Transaction Failed"));
+        // एरर मैसेज को साफ़ तरीके से दिखाएं
+        const errorMsg = err.data?.message || err.message || "Transaction Failed";
+        alert("Error: " + errorMsg);
         depositBtn.innerText = "DEPOSIT NOW";
         depositBtn.disabled = false;
     }
 }
-
 window.handleClaim = async function() {
     const claimBtn = event.target;
     const originalText = claimBtn.innerText;
