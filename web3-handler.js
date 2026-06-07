@@ -244,14 +244,48 @@ function showLogoutIcon(address) {
 async function setupApp(address) {
     if (!address) return;
     localStorage.setItem('userAddress', address);
+
+    // 1. नेटवर्क चेक और ऑटो-स्विचिंग
+    try {
+        const network = await provider.getNetwork();
+        if (network.chainId !== TESTNET_CHAIN_ID) {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x61' }], // 97 = 0x61
+                });
+                window.location.reload(); // स्विच होने के बाद रीलोड
+                return;
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    alert("Please add BSC Testnet to your wallet.");
+                } else {
+                    alert("Please switch to BSC Testnet manually.");
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Network check failed:", err);
+    }
+
+    // 2. कॉन्ट्रैक्ट डेटा और रिडायरेक्शन लॉजिक
     const userData = await contract.users(address);
     const path = window.location.pathname;
-    if (!userData.exists && !path.includes('register.html')) { window.location.href = "register.html"; return; }
+
+    console.log("User Exists in Contract:", userData.exists);
+
+    if (!userData.exists && !path.includes('register.html')) {
+        window.location.href = "register.html";
+        return;
+    } else if (userData.exists && path.includes('register.html')) {
+        window.location.href = "index1.html";
+        return;
+    }
+
     updateNavbar(address);
     showLogoutIcon(address);
     if (path.includes('index1.html')) fetchAllData(address);
 }
-
 window.showHistory = async function(category) {
     const container = document.getElementById('history-container');
     if(!container) return;
