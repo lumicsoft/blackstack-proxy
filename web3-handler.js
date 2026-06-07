@@ -64,7 +64,7 @@ async function checkReferralURL() {
 // --- INITIALIZATION ---
 async function init() {
     checkReferralURL();
-    const bscTestnetRPC = "https://data-seed-prebsc-1-s1.binance.org:8545/";
+    const bscTestnetRPC = "https://bsc-testnet.publicnode.com";
     const savedAddr = localStorage.getItem('userAddress');
 
     try {
