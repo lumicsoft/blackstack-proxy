@@ -573,28 +573,32 @@ async function fetchAllData(address) {
         const activeContract = window.contract || contract;
         if (!activeContract) return;
 
-        // Contract call
+        // Contract calls
         const stats = await activeContract.getUserStats(address); 
         const roi = await activeContract.getIncomeByType(address, "ROI");
         const level = await activeContract.getIncomeByType(address, "LEVEL");
         const rank = await activeContract.getIncomeByType(address, "RANK");
 
-        // UI Update (Matching IDs)
+        // UI Updates with safe formatting
         updateText('total-deposit', format(stats[0]));
         updateText('active-deposit', format(stats[0]));
         updateText('total-earned', format(stats[1]));
         updateText('total-withdrawn', format(stats[2]));
-        updateText('team-count', stats[4].toString());
-        updateText('directs-count', stats[3].toString());
+        updateText('team-count', stats[4] ? stats[4].toString() : "0");
+        updateText('directs-count', stats[3] ? stats[3].toString() : "0");
         
         // Income Types
         updateText('roi-earning', format(roi));
         updateText('level-earning', format(level));
         updateText('rank-earning', format(rank));
 
-        // Withdrawable Calculation
-        const withdrawable = parseFloat(format(stats[1])) - parseFloat(format(stats[2]));
-        updateText('compounding-balance', withdrawable.toFixed(2));
+        // Withdrawable Calculation (BigNumber check)
+        // stats[1] is Total Income, stats[2] is Total Withdrawn
+        let earned = ethers.BigNumber.isBigNumber(stats[1]) ? parseFloat(ethers.utils.formatUnits(stats[1], 18)) : 0;
+        let withdrawn = ethers.BigNumber.isBigNumber(stats[2]) ? parseFloat(ethers.utils.formatUnits(stats[2], 18)) : 0;
+        let withdrawable = earned - withdrawn;
+        
+        updateText('compounding-balance', withdrawable > 0 ? withdrawable.toFixed(2) : "0.00");
         updateText('cap-balance', format(stats[0]));
         updateText('active-deposit-cp', format(stats[0]));
 
