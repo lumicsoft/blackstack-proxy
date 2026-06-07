@@ -634,17 +634,22 @@ function start8HourCountdown() {
 
 // --- UTILS ---
 const format = (val) => {
-    try { return parseFloat(ethers.utils.formatUnits(val, 18)).toFixed(2); }
-    catch { return "0.00"; }
+    try {
+        if (!val) return "0.00";
+        // Check if it's a BigNumber object
+        if (val.toString) {
+            return parseFloat(ethers.utils.formatUnits(val, 18)).toFixed(2);
+        }
+        return parseFloat(val).toFixed(2);
+    } catch (e) {
+        return "0.00";
+    }
 };
-
 
 const updateText = (id, val) => { 
     const elements = document.querySelectorAll(`[id="${id}"]`); 
     if(elements.length > 0) {
-        elements.forEach(el => {
-            el.innerText = val; 
-        });
+        elements.forEach(el => { el.innerText = val; });
     }
 };
 
