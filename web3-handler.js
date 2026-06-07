@@ -26,7 +26,8 @@ const CONTRACT_ABI = [
     "function claimUnstake(uint256 stakeIndex) external",
     "function users(address) view returns (bool exists, address referrer, uint256 totalStaked, uint256 totalIncome, uint256 totalWithdrawn, uint256 activeDirects, uint256 teamCount)",
     "function getIncomeHistory(address user) external view returns(tuple(string incomeType, uint256 amount, uint256 timestamp)[])",
-    "function getUserStats(address user) external view returns(uint256 totalStaked, uint256 totalIncome, uint256 totalWithdrawn, uint256 activeDirects, uint256 teamCount)"
+    "function getUserStats(address user) external view returns(uint256 totalStaked, uint256 totalIncome, uint256 totalWithdrawn, uint256 activeDirects, uint256 teamCount)",
+    "function getIncomeByType(address user, string incomeType) external view returns (uint256)"
 ];
 
 const ERC20_ABI = ["function approve(address spender, uint256 amount) public returns (bool)", "function allowance(address owner, address spender) public view returns (uint256)"];
