@@ -64,9 +64,19 @@ async function init() {
         if (window.ethereum) {
             provider = new ethers.providers.Web3Provider(window.ethereum, "any");
             
+            // --- AUTO NETWORK SWITCH LOGIC (Only Switch) ---
             const network = await provider.getNetwork();
             if (network.chainId !== TESTNET_CHAIN_ID) {
-                console.warn("Wrong Network, please switch to 97");
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0x61' }], // 0x61 = 97 (BSC Testnet)
+                    });
+                    window.location.reload();
+                    return; 
+                } catch (switchError) {
+                    console.warn("User denied network switch or network not added.");
+                }
             }
 
             contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
@@ -90,7 +100,6 @@ async function init() {
         console.error("Init Error:", error);
     }
 }
-
 // --- CORE LOGIC ---
 window.handleDeposit = async function() {
     const amountInput = document.getElementById('deposit-amount');
