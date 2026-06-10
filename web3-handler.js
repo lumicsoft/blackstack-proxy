@@ -20,7 +20,7 @@ const RANK_DETAILS = [
 // --- ABI (Full Updated for USDT Contract) ---
 const CONTRACT_ABI = [
     "function register(address referrer) external",
-    "function stake(uint256 amount, bool withBurn, address referrer) external",
+   "function stake(uint256 amount, bool withBurn) external",
     "function withdraw(uint256 amount) external",
     "function requestUnstake(uint256 stakeIndex) external",
     "function claimUnstake(uint256 stakeIndex) external",
@@ -104,9 +104,8 @@ async function init() {
 window.handleDeposit = async function() {
     const amountInput = document.getElementById('deposit-amount');
     const depositBtn = document.getElementById('deposit-btn');
-    const referrer = document.getElementById('reg-referrer')?.value || "0x0000000000000000000000000000000000000000";
     
-    if (!amountInput || !amountInput.value || amountInput.value < 100) return alert("Min 100 BLX required!");
+    if (!amountInput || !amountInput.value || parseFloat(amountInput.value) < 100) return alert("Min 100 BLX required!");
 
     try {
         let activeSigner = window.signer || signer;
@@ -128,23 +127,27 @@ window.handleDeposit = async function() {
         const amountInWei = ethers.utils.parseUnits(amountInput.value.toString(), 18);
         const blxToken = new ethers.Contract(BLX_TOKEN_ADDRESS, ERC20_ABI, activeSigner);
 
-        const approveGas = await blxToken.estimateGas.approve(CONTRACT_ADDRESS, amountInWei);
-        const approveGasWithBuffer = approveGas.mul(130).div(100);
-
+        // 1. Approval Step
         const allowance = await blxToken.allowance(await activeSigner.getAddress(), CONTRACT_ADDRESS);
         if (allowance.lt(amountInWei)) {
-            await (await blxToken.approve(CONTRACT_ADDRESS, amountInWei, { gasLimit: approveGasWithBuffer })).wait();
+            const approveTx = await blxToken.approve(CONTRACT_ADDRESS, amountInWei);
+            await approveTx.wait();
         }
 
         depositBtn.innerText = "SIGNING...";
-        const depositGas = await activeContract.estimateGas.stake(amountInWei, true, referrer);
-        const tx = await activeContract.stake(amountInWei, true, referrer, { gasLimit: depositGas.mul(130).div(100) });
+
+        // 2. Stake Step (SOLIDIY में 2 पैरामीटर्स हैं, इसलिए हमने referrer हटा दिया है)
+        // stake(uint256 amount, bool withBurn)
+        const depositGas = await activeContract.estimateGas.stake(amountInWei, true);
+        const tx = await activeContract.stake(amountInWei, true, { gasLimit: depositGas.mul(150).div(100) });
         
         depositBtn.innerText = "DEPOSITING...";
         await tx.wait();
+        
         alert("Deposit Successful!");
         location.reload(); 
     } catch (err) {
+        console.error("Deposit Error:", err);
         alert("Error: " + (err.data?.message || err.message || "Transaction Failed"));
         depositBtn.innerText = "DEPOSIT NOW";
         depositBtn.disabled = false;
