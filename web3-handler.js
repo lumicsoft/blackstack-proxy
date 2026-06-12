@@ -59,7 +59,6 @@ async function checkReferralURL() {
     }
 }
 
-// --- INITIALIZATION ---
 async function init() {
     checkReferralURL();
 
@@ -67,13 +66,13 @@ async function init() {
         if (window.ethereum) {
             provider = new ethers.providers.Web3Provider(window.ethereum, "any");
             
-            // --- AUTO NETWORK SWITCH LOGIC (Only Switch) ---
+            // --- AUTO NETWORK SWITCH LOGIC ---
             const network = await provider.getNetwork();
             if (network.chainId !== TESTNET_CHAIN_ID) {
                 try {
                     await window.ethereum.request({
                         method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: '0x61' }], // 0x61 = 97 (BSC Testnet)
+                        params: [{ chainId: '0x61' }], // 97 = 0x61
                     });
                     window.location.reload();
                     return; 
@@ -82,14 +81,19 @@ async function init() {
                 }
             }
 
+            // Read-only contract instance
             contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
             window.contract = contract;
 
             const accounts = await window.ethereum.request({ method: 'eth_accounts' });
             if (accounts.length > 0) {
                 signer = provider.getSigner();
+                window.signer = signer; // <--- Yeh line zaroori hai
+                
+                // Signer ke sath contract instance
                 contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-                window.contract = contract;
+                window.contract = contract; // <--- Global contract update
+                
                 await setupApp(accounts[0]);
             }
 
