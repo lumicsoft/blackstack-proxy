@@ -20,13 +20,14 @@ const RANK_DETAILS = [
 // --- ABI (Full Updated for USDT Contract) ---
 const CONTRACT_ABI = [
     "function register(address referrer) external",
-   "function stake(uint256 amount, bool withBurn) external",
+    "function stake(uint256 amount, bool withBurn) external",
+    "function claimROI(uint256 stakeIndex) external",
     "function withdraw(uint256 amount) external",
     "function requestUnstake(uint256 stakeIndex) external",
     "function claimUnstake(uint256 stakeIndex) external",
-    "function users(address) view returns (bool exists, address referrer, uint256 totalStaked, uint256 totalIncome, uint256 totalWithdrawn, uint256 activeDirects, uint256 teamCount)",
+    "function users(address) view returns (bool exists, address referrer, uint256 totalStaked, uint256 totalIncome, uint256 totalWithdrawn, uint256 activeDirects, uint256 teamCount, string currentRank)",
     "function getIncomeHistory(address user) external view returns(tuple(string incomeType, uint256 amount, uint256 timestamp)[])",
-    "function getUserStats(address user) external view returns(uint256 totalStaked, uint256 totalIncome, uint256 totalWithdrawn, uint256 activeDirects, uint256 teamCount)",
+    "function getUserStats(address user) external view returns(uint256 roi, uint256 level, uint256 referral, uint256 reward, uint256 teamShare, uint256 teamCount, string rank)",
     "function getIncomeByType(address user, string incomeType) external view returns (uint256)"
 ];
 
