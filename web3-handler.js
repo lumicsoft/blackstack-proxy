@@ -102,25 +102,17 @@ async function init() {
     }
 }
 // --- CORE LOGIC ---
-window.handleDeposit = async function() {
+window.handleDeposit = async function(withBurn) {
     const amountInput = document.getElementById('deposit-amount');
-    const depositBtn = document.getElementById('deposit-btn');
+    const depositBtn = event.target; // Jo button click hua hai
     
-    if (!amountInput || !amountInput.value || parseFloat(amountInput.value) < 100) return alert("Min 100 BLX required!");
+    if (!amountInput || !amountInput.value || parseFloat(amountInput.value) < 100) {
+        return alert("Min 100 BLX required!");
+    }
 
     try {
-        let activeSigner = window.signer || signer;
-        let activeContract = window.contract || contract;
-
-        if (!activeSigner || !window.ethereum) {
-            if (!window.ethereum) return alert("Please use Trust Wallet or MetaMask browser!");
-            const tempProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
-            await tempProvider.send("eth_requestAccounts", []);
-            activeSigner = tempProvider.getSigner();
-            activeContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, activeSigner);
-            window.signer = activeSigner;
-            window.contract = activeContract;
-        }
+        let activeSigner = window.signer || provider.getSigner();
+        let activeContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, activeSigner);
 
         depositBtn.disabled = true;
         depositBtn.innerText = "APPROVING...";
@@ -137,20 +129,22 @@ window.handleDeposit = async function() {
 
         depositBtn.innerText = "SIGNING...";
 
-        // 2. Stake Step (SOLIDIY में 2 पैरामीटर्स हैं, इसलिए हमने referrer हटा दिया है)
+        // 2. Stake Step: yahan 'withBurn' dynamic parameter use ho raha hai
         // stake(uint256 amount, bool withBurn)
-        const depositGas = await activeContract.estimateGas.stake(amountInWei, true);
-        const tx = await activeContract.stake(amountInWei, true, { gasLimit: depositGas.mul(150).div(100) });
+        const depositGas = await activeContract.estimateGas.stake(amountInWei, withBurn);
+        const tx = await activeContract.stake(amountInWei, withBurn, { 
+            gasLimit: depositGas.mul(150).div(100) 
+        });
         
-        depositBtn.innerText = "DEPOSITING...";
+        depositBtn.innerText = withBurn ? "BURNING & STAKING..." : "STAKING...";
         await tx.wait();
         
-        alert("Deposit Successful!");
+        alert(withBurn ? "Stake with Burn Successful!" : "Stake Successful!");
         location.reload(); 
     } catch (err) {
         console.error("Deposit Error:", err);
         alert("Error: " + (err.data?.message || err.message || "Transaction Failed"));
-        depositBtn.innerText = "DEPOSIT NOW";
+        depositBtn.innerText = withBurn ? "STAKE WITH BURN" : "STAKE WITHOUT BURN";
         depositBtn.disabled = false;
     }
 }
