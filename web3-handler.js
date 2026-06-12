@@ -149,37 +149,39 @@ window.handleDeposit = async function(withBurn) {
     }
 }
 
-window.handleClaim = async function() {
+window.handleClaimROI = async function(stakeIndex = 0) {
     const claimBtn = event.target;
-    const originalText = claimBtn.innerText;
     try {
-        claimBtn.disabled = true; claimBtn.innerText = "SIGNING...";
-        const tx = await contract.claimRewards();
-        claimBtn.innerText = "CLAIMING...";
+        claimBtn.disabled = true; claimBtn.innerText = "CLAIMING...";
+        const activeContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider.getSigner());
+        const tx = await activeContract.claimROI(stakeIndex);
         await tx.wait();
-        alert("Rewards Claimed Successfully!");
+        alert("ROI Claimed Successfully!");
         location.reload(); 
     } catch (err) {
         alert("Claim failed: " + (err.reason || err.message));
-        claimBtn.innerText = originalText; claimBtn.disabled = false;
+        claimBtn.disabled = false; claimBtn.innerText = "CLAIM ROI";
     }
+}
+window.handleRequestUnstake = async function(stakeIndex = 0) {
+    try {
+        const activeContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider.getSigner());
+        const tx = await activeContract.requestUnstake(stakeIndex);
+        await tx.wait();
+        alert("Unstake Requested! Wait 14 days to claim.");
+    } catch (err) { alert("Error: " + err.message); }
 }
 
-window.handleReinvestRewards = async function() {
-    const btn = event.target;
-    const originalText = btn.innerText;
+window.handleClaimUnstake = async function(stakeIndex = 0) {
     try {
-        btn.disabled = true; btn.innerText = "SIGNING...";
-        const tx = await contract.reinvestRewards();
-        btn.innerText = "PROCESSING...";
+        const activeContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider.getSigner());
+        const tx = await activeContract.claimUnstake(stakeIndex);
         await tx.wait();
-        alert("Rewards Reinvested Successfully!");
+        alert("Capital Claimed!");
         location.reload();
-    } catch (err) {
-        alert("Failed: " + (err.reason || "Rejected"));
-        btn.innerText = originalText; btn.disabled = false;
-    }
+    } catch (err) { alert("Error: " + err.message); }
 }
+
 
 window.handleCompoundDaily = async function() {
     const compoundBtn = event.target;
@@ -197,21 +199,6 @@ window.handleCompoundDaily = async function() {
     }
 }
 
-window.handleCapitalWithdraw = async function() {
-    if (!confirm("Are you sure?")) return;
-    const withdrawBtn = event.target;
-    try {
-        withdrawBtn.disabled = true; withdrawBtn.innerText = "CONFIRMING...";
-        const tx = await contract.withdrawMaturedCapital();
-        withdrawBtn.innerText = "WITHDRAWING...";
-        await tx.wait();
-        alert("Capital Withdrawn Successfully!");
-        location.reload(); 
-    } catch (err) {
-        alert("Withdraw failed: " + (err.reason || err.message));
-        withdrawBtn.disabled = false;
-    }
-}
 
 window.handleLogin = async function() {
     try {
@@ -313,18 +300,53 @@ window.fetchBlockchainHistory = async function(allowedTypes) {
             .map(item => ({ type: item.incomeType, amount: format(item.amount), color: item.incomeType === 'WITHDRAW' ? 'text-red-400' : 'text-green-400' }));
     } catch (e) { return []; }
 }
-
+// --- UPDATED fetchAllData FUNCTION ---
 async function fetchAllData(address) {
     try {
+        // 1. getUserStats (Contract function call)
+        // Returns: (roi, level, referral, reward, teamShare, teamCount, rank)
         const stats = await contract.getUserStats(address);
-        updateText('total-deposit', format(stats[0]));
-        updateText('total-earned', format(stats[1]));
-        updateText('total-withdrawn', format(stats[2]));
-        updateText('team-count', stats[4].toString());
-        updateText('directs-count', stats[3].toString());
-    } catch (err) { console.error("Data Sync Error:", err); }
+        
+        // 2. User main data call (totalStaked, totalIncome, totalWithdrawn ke liye)
+        const userData = await contract.users(address);
+
+        // --- Dashboard UI Mapping ---
+
+        // Revenue Stats (From stats array)
+        updateText('roi-earning', format(stats[0]));        // ROI Income
+        updateText('level-earning', format(stats[1]));      // Level Income
+        updateText('referral-bonus', format(stats[2]));     // Referral Bonus
+        updateText('rank-earning', format(stats[3]));       // Reward Bonus
+        // (Note: stats[4] is TeamProfitShare, stats[5] is TeamCount)
+        
+        // Dashboard Stats Box Mapping
+        updateText('total-deposit', format(userData.totalStaked));      // Total Staked
+        updateText('total-earned', format(userData.totalIncome));       // Total Income
+        updateText('total-withdrawn', format(userData.totalWithdrawn)); // Total Withdrawn
+        updateText('team-count', stats[5].toString());                  // Team Count
+        updateText('directs-count', userData.activeDirects.toString());  // Active Directs
+        
+        // Dynamic Rank Display
+        updateText('rank-display', stats[6].toString());
+        
+        // Calculate Withdrawable (Available Balance = Total Income - Total Withdrawn)
+        // Note: ethers.BigNumber ka use karein sub ke liye
+        const totalIncomeBN = userData.totalIncome;
+        const totalWithdrawnBN = userData.totalWithdrawn;
+        const withdrawable = totalIncomeBN.sub(totalWithdrawnBN);
+        updateText('compounding-balance', format(withdrawable));
+        updateText('cap-balance', format(withdrawable)); // Available Capital
+
+        // Active Deposit for Compound Power (Total Active Stakes)
+        updateText('active-deposit', format(userData.totalStaked));
+        updateText('active-deposit-cp', format(userData.totalStaked));
+
+    } catch (err) { 
+        console.error("Data Sync Error:", err); 
+    }
 }
 
+// Ensure ki 'format' function ethers.utils ka use kar raha ho
 const format = (val) => val ? parseFloat(ethers.utils.formatUnits(val, 18)).toFixed(2) : "0.00";
 const updateText = (id, val) => document.querySelectorAll(`[id="${id}"]`).forEach(el => el.innerText = val);
 function updateNavbar(addr) { const btn = document.getElementById('connect-btn'); if(btn) btn.innerText = addr.substring(0,6) + "..." + addr.substring(38); }
