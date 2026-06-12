@@ -83,11 +83,13 @@ async function init() {
             }
 
             contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+            window.contract = contract;
 
             const accounts = await window.ethereum.request({ method: 'eth_accounts' });
             if (accounts.length > 0) {
                 signer = provider.getSigner();
                 contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                window.contract = contract;
                 await setupApp(accounts[0]);
             }
 
