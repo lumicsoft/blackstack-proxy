@@ -17,7 +17,6 @@ const RANK_DETAILS = [
     { name: "Master King", roi: "7.50%", targetTeam: 7, targetVolume: 1000 }
 ];
 
-// --- ABI (Full Updated for USDT Contract) ---
 const CONTRACT_ABI = [
     "function register(address referrer) external",
     "function stake(uint256 amount, bool withBurn) external",
@@ -28,9 +27,12 @@ const CONTRACT_ABI = [
     "function users(address) view returns (bool exists, address referrer, uint256 totalStaked, uint256 totalIncome, uint256 totalWithdrawn, uint256 activeDirects, uint256 teamCount, string currentRank)",
     "function getIncomeHistory(address user) external view returns(tuple(string incomeType, uint256 amount, uint256 timestamp)[])",
     "function getUserStats(address user) external view returns(uint256 roi, uint256 level, uint256 referral, uint256 reward, uint256 teamShare, uint256 teamCount, string rank)",
-    "function getIncomeByType(address user, string incomeType) external view returns (uint256)"
+    "function getIncomeByType(address user, string incomeType) external view returns (uint256)",
+    // Naye added functions:
+    "function getTeamByLevel(address _user) external view returns (address[] memory, uint256[] memory)",
+    "function getStakeCount(address user) external view returns (uint256)",
+    "function getStake(address user, uint256 index) external view returns (tuple(uint256 amount, uint256 startTime, uint256 totalRoiReceived, uint256 maxPayout, bool withBurn, bool active, uint256 lastClaimTime, bool unstakeRequested, uint256 unstakeRequestTime, uint256 totalEarnedFromStake))"
 ];
-
 const ERC20_ABI = ["function approve(address spender, uint256 amount) public returns (bool)", "function allowance(address owner, address spender) public view returns (uint256)"];
 
 const calculateGlobalROI = () => 0.90;
