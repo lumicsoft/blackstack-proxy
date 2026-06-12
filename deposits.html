@@ -76,56 +76,70 @@
     <script>
         const DAILY_ROI = 0.23; 
         let myChart = null;
-
-      async function loadActiveDeposits() {
+async function loadActiveDeposits() {
     const grid = document.getElementById('deposits-grid');
-    
-    // Console mein check karenge ki kya mil raha hai
-    console.log("Loading started...");
-    
-    if (!window.contract) {
-        console.error("Contract not found in window!");
-        grid.innerHTML = `<div class="text-red-500">Contract load nahi hua!</div>`;
-        return;
-    }
-
+    const activeContract = window.contract;
     const address = localStorage.getItem('userAddress');
-    if (!address) {
-        grid.innerHTML = `<div class="text-red-500">Wallet address nahi mila!</div>`;
+
+    if (!activeContract || !address) {
+        setTimeout(loadActiveDeposits, 1000);
         return;
     }
 
     try {
-        console.log("Fetching stake count for:", address);
-        const countBN = await window.contract.getStakeCount(address);
-        const count = parseInt(countBN.toString());
-        console.log("Count received:", count);
-
-        if (count === 0) {
-            grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-500">Koi active node nahi mila.</div>`;
+        // 1. Stake Count fetch karein
+        const stakeCountBN = await activeContract.getStakeCount(address);
+        const stakeCount = stakeCountBN.toNumber(); // Convert BigNumber to number
+        console.log("Stake Count:", stakeCount);
+        
+        if (stakeCount === 0) {
+            grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-500 uppercase text-xs">No active nodes found.</div>`;
             return;
         }
-
+        
         let html = '';
-        for (let i = 0; i < count; i++) {
-            const s = await window.contract.getStake(address, i);
-            console.log("Stake data:", s);
+        let totalActive = 0;
+        let foundAny = false;
+
+        // 2. Loop sahi tarike se chalayein
+        for (let i = 0; i < stakeCount; i++) {
+            const s = await activeContract.getStake(address, i);
             
+            // Check active status
             if (s.active) {
+                foundAny = true;
                 const amount = parseFloat(ethers.utils.formatUnits(s.amount, 18));
+                const maxPayout = parseFloat(ethers.utils.formatUnits(s.maxPayout, 18));
+                const earned = parseFloat(ethers.utils.formatUnits(s.totalEarnedFromStake, 18));
+                totalActive += amount;
+                
+                // Progress calculation
+                let progress = maxPayout > 0 ? ((earned / maxPayout) * 100).toFixed(1) : 0;
+
                 html += `
                 <div class="premium-card">
                     <div class="inner-content !block p-6">
-                        <h3 class="text-xl font-black orbitron text-white">$${amount.toLocaleString()}</h3>
-                        <p class="text-[9px] text-gray-500 mt-2 uppercase">STATUS: ACTIVE</p>
+                        <div class="flex justify-between mb-4">
+                            <h3 class="text-xl font-black orbitron text-white">$${amount.toLocaleString()}</h3>
+                            <span class="status-badge">${s.withBurn ? 'BURN' : 'NORMAL'}</span>
+                        </div>
+                        <div class="progress-container"><div class="progress-bar-node" style="width: ${progress}%"></div></div>
+                        <p class="text-[9px] text-gray-500 mt-2 uppercase">Earned: $${earned.toFixed(2)} / $${maxPayout.toFixed(2)}</p>
                     </div>
                 </div>`;
             }
         }
-        grid.innerHTML = html || `<div class="col-span-full text-center py-20">Koi active stake nahi hai.</div>`;
+
+        // 3. UI Update
+        document.getElementById('total-active-capital').innerText = totalActive.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('total-daily-profit').innerText = (totalActive * (DAILY_ROI / 100)).toFixed(2);
+        
+        grid.innerHTML = foundAny ? html : `<div class="col-span-full text-center py-20 text-gray-600">No Active Nodes</div>`;
+        lucide.createIcons();
+
     } catch (err) {
-        console.error("Full Error:", err);
-        grid.innerHTML = `<div class="col-span-full text-center py-20 text-red-500">Error: ${err.message}</div>`;
+        console.error("Critical Error in loadActiveDeposits:", err);
+        grid.innerHTML = `<div class="col-span-full text-center py-20 text-red-500 text-xs">Error: ${err.message}</div>`;
     }
 }
         
