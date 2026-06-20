@@ -29,7 +29,7 @@ const CONTRACT_ABI = [
     "function getUserStats(address user) external view returns(uint256 roi, uint256 level, uint256 referral, uint256 reward, uint256 teamShare, uint256 teamCount, string rank)",
     "function getIncomeByType(address user, string incomeType) external view returns (uint256)",
     // Naye added functions:
-    "function getTeamByLevel(address _user) external view returns (address[] memory, uint256[] memory)",
+    "function getTeamByLevel(address _user, uint256 _level) external view returns (address[], uint256[])",
     "function getStakeCount(address user) external view returns (uint256)",
     "function getStake(address user, uint256 index) external view returns (tuple(uint256 amount, uint256 startTime, uint256 totalRoiReceived, uint256 maxPayout, bool withBurn, bool active, uint256 lastClaimTime, bool unstakeRequested, uint256 unstakeRequestTime, uint256 totalEarnedFromStake))"
 ];
