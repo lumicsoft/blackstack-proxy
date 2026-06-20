@@ -179,7 +179,17 @@ window.handleRequestUnstake = async function(stakeIndex = 0) {
         alert("Unstake Requested! Wait 14 days to claim.");
     } catch (err) { alert("Error: " + err.message); }
 }
-
+window.handleWithdraw = async function() {
+    const amount = document.getElementById('withdraw-amount').value;
+    if(!amount || amount <= 0) return alert("Enter valid amount");
+    try {
+        const amountInWei = ethers.utils.parseUnits(amount.toString(), 18);
+        const tx = await window.contract.withdraw(amountInWei);
+        await tx.wait();
+        alert("Withdrawal Successful!");
+        location.reload();
+    } catch (err) { alert("Withdraw Error: " + (err.reason || err.message)); }
+}
 window.handleClaimUnstake = async function(stakeIndex = 0) {
     try {
         const activeContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider.getSigner());
