@@ -85,30 +85,36 @@
         }
 
         async function loadLevelData(level) {
-            const tableBody = document.getElementById('team-table-body');
-            tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-yellow-500">SYNCING...</td></tr>`;
-            try {
-                const address = await window.signer.getAddress();
-                const [wallets, stakes] = await window.contract.getTeamByLevel(address);
-                
-                if (!wallets || wallets.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-600">No data</td></tr>`;
-                    return;
-                }
-
-                let html = '';
-                for (let i = 0; i < wallets.length; i++) {
-                    const activeAmt = parseFloat(ethers.utils.formatUnits(stakes[i], 18));
-                    html += `<tr>
-                        <td class="p-4 font-mono text-yellow-500">${wallets[i].substring(0,6)}...${wallets[i].substring(38)}</td>
-                        <td class="p-4">Lvl ${level}</td>
-                        <td class="p-4">$${activeAmt.toLocaleString()}</td>
-                        <td class="p-4">${activeAmt > 0 ? '<span class="text-green-500">ACTIVE</span>' : '<span class="text-red-500">INACTIVE</span>'}</td>
-                    </tr>`;
-                }
-                tableBody.innerHTML = html;
-            } catch (err) { tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error</td></tr>`; }
+    const tableBody = document.getElementById('team-table-body');
+    tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-yellow-500">SYNCING LEVEL ${level}...</td></tr>`;
+    
+    try {
+        const address = await window.signer.getAddress();
+        
+        // Yahan 'level' ko pass karna zaroori hai kyunki ab contract 2 arguments leta hai
+        const [wallets, stakes] = await window.contract.getTeamByLevel(address, level);
+        
+        if (!wallets || wallets.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-600">No members at Level ${level}</td></tr>`;
+            return;
         }
+
+        let html = '';
+        for (let i = 0; i < wallets.length; i++) {
+            const activeAmt = parseFloat(ethers.utils.formatUnits(stakes[i], 18));
+            html += `<tr>
+                <td class="p-4 font-mono text-yellow-500">${wallets[i].substring(0,6)}...${wallets[i].substring(38)}</td>
+                <td class="p-4">Lvl ${level}</td>
+                <td class="p-4">$${activeAmt.toLocaleString()}</td>
+                <td class="p-4">${activeAmt > 0 ? '<span class="text-green-500">ACTIVE</span>' : '<span class="text-red-500">INACTIVE</span>'}</td>
+            </tr>`;
+        }
+        tableBody.innerHTML = html;
+    } catch (err) { 
+        console.error("Error loading level data:", err);
+        tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error Loading Level ${level}</td></tr>`; 
+    }
+}
 
         window.addEventListener('load', () => setTimeout(loadReferralData, 1500));
     </script>
