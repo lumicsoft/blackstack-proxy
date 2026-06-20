@@ -69,7 +69,6 @@
 
                 <div class="flex flex-col md:flex-row items-center gap-3 w-full">
                     <input type="number" id="deposit-amount" placeholder="Enter custom amount" class="deposit-input-field w-full md:flex-1">
-                    <!-- Modified buttons for Burn/No-Burn -->
                     <button onclick="handleDeposit(true)" class="btn-gold-pro px-4 py-3 rounded-xl text-[10px] orbitron whitespace-nowrap">STAKE (BURN)</button>
                     <button onclick="handleDeposit(false)" class="btn-outline-pro px-4 py-3 rounded-xl text-[10px] orbitron whitespace-nowrap border-yellow-500/30 text-yellow-500">STAKE (NO BURN)</button>
                 </div>
@@ -114,7 +113,8 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- STATS SECTION -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
             <div class="premium-card"><div class="inner-content stat-box">
                 <div class="flex items-center gap-3"><i data-lucide="database" class="text-yellow-600 w-6 h-6"></i><p class="label-text">Deposits</p></div>
                 <h3 class="amount-text orbitron">$<span id="total-deposit">0.00</span></h3>
@@ -123,14 +123,21 @@
                 <div class="flex items-center gap-3"><i data-lucide="zap" class="text-green-600 w-6 h-6"></i><p class="label-text">Active</p></div>
                 <h3 class="amount-text orbitron">$<span id="active-deposit">0.00</span></h3>
             </div></div>
+            <!-- Updated Labels -->
             <div class="premium-card"><div class="inner-content stat-box">
-                <div class="flex items-center gap-3"><i data-lucide="users" class="text-blue-600 w-6 h-6"></i><p class="label-text">Level</p></div>
+                <div class="flex items-center gap-3"><i data-lucide="users" class="text-blue-600 w-6 h-6"></i><p class="label-text">Team Bonus</p></div>
                 <h3 class="amount-text orbitron">$<span id="level-earning">0.00</span></h3>
             </div></div>
             <div class="premium-card"><div class="inner-content stat-box">
-                <div class="flex items-center gap-3"><i data-lucide="medal" class="text-purple-600 w-6 h-6"></i><p class="label-text">Rank</p></div>
+                <div class="flex items-center gap-3"><i data-lucide="medal" class="text-purple-600 w-6 h-6"></i><p class="label-text">Reward Bonus</p></div>
                 <h3 class="amount-text orbitron">$<span id="rank-earning">0.00</span></h3>
             </div></div>
+            <!-- New Profit Share Card -->
+            <div class="premium-card"><div class="inner-content stat-box">
+                <div class="flex items-center gap-3"><i data-lucide="gift" class="text-yellow-600 w-6 h-6"></i><p class="label-text">Team Profit Share</p></div>
+                <h3 class="amount-text orbitron">$<span id="team-profit-share">0.00</span></h3>
+            </div></div>
+            
             <div class="premium-card"><div class="inner-content stat-box">
                 <div class="flex items-center gap-3"><i data-lucide="trending-up" class="text-emerald-600 w-6 h-6"></i><p class="label-text">Total Earned</p></div>
                 <h3 class="amount-text orbitron">$<span id="total-earned">0.00</span></h3>
@@ -149,6 +156,21 @@
             </div></div>
         </div>
 
+        <!-- NEW WITHDRAWAL SECTION -->
+        <div class="premium-card p-8 border border-yellow-500/20">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                    <p class="label-text mb-2">Available to Withdraw</p>
+                    <h3 class="text-3xl font-black orbitron text-yellow-500"><span id="withdraw-balance-display">0.00</span> BLX</h3>
+                </div>
+                <div class="flex gap-4 w-full md:w-auto">
+                    <input type="number" id="withdraw-amount" placeholder="Enter Amount" class="bg-black/50 border border-white/10 rounded-xl px-4 py-4 w-full text-white">
+                    <button onclick="handleWithdraw()" class="btn-gold-pro px-10 py-4 rounded-xl text-xs orbitron uppercase">Withdraw Now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compound & Unstake Sections -->
         <div class="premium-card">
             <div class="inner-content !block py-10 px-6">
                 <div class="flex justify-between items-center mb-10">
@@ -177,7 +199,6 @@
             </div>
         </div>
 
-        <!-- Capital Management Updated Section -->
         <div class="premium-card p-8">
             <div class="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div class="text-center md:text-left">
@@ -198,19 +219,13 @@
     
     <script>
         lucide.createIcons();
-
-        // --- FINAL SYNC TRIGGER ---
         window.addEventListener('load', () => {
-            // Wait for 1.5s to ensure web3-handler and contract are initialized
             setTimeout(async () => {
                 const addr = localStorage.getItem('userAddress');
                 if(addr && typeof fetchAllData === 'function') {
                     await fetchAllData(addr);
-                    console.log("Dashboard Data Synced Successfully");
                 }
             }, 1500);
-
-            // Status Badge Logic
             setTimeout(() => {
                 const activeDep = parseFloat(document.getElementById('active-deposit')?.innerText) || 0;
                 if(activeDep > 0) {
@@ -220,7 +235,6 @@
                 }
             }, 3000);
         });
-
         function setAmount(amt) { document.getElementById('deposit-amount').value = amt; }
         function copyLink() {
             const refInput = document.getElementById('refURL');
