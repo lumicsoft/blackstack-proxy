@@ -311,6 +311,9 @@ window.fetchBlockchainHistory = async function(allowedTypes) {
 // --- UPDATED fetchAllData FUNCTION ---
 async function fetchAllData(address) {
     try {
+        const refUrl = `${window.location.origin}/register.html?ref=${address}`; 
+    const refInput = document.getElementById('refURL');
+    if(refInput) refInput.value = refUrl;
         // 1. getUserStats (Contract function call)
         // Returns: (roi, level, referral, reward, teamShare, teamCount, rank)
         const stats = await contract.getUserStats(address);
