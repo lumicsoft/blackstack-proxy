@@ -314,43 +314,43 @@ async function fetchAllData(address) {
     const refInput = document.getElementById('refURL');
     if(refInput) refInput.value = refUrl;
     
+    // Address display fix
+    const addrDisplay = document.getElementById('user-address');
+    if(addrDisplay) addrDisplay.innerText = address;
+    
     try {
+        // 1. getUserStats (returns: roi, level, referral, reward, teamShare, teamCount, rank)
+        const stats = await contract.getUserStats(address); 
         
-        // 1. getUserStats (Contract function call)
-        // Returns: (roi, level, referral, reward, teamShare, teamCount, rank)
-        const stats = await contract.getUserStats(address);
-        
-        // 2. User main data call (totalStaked, totalIncome, totalWithdrawn ke liye)
+        // 2. User main data call
         const userData = await contract.users(address);
 
         // --- Dashboard UI Mapping ---
 
         // Revenue Stats (From stats array)
         updateText('roi-earning', format(stats[0]));        // ROI Income
-        updateText('level-earning', format(stats[1]));      // Level Income
+        updateText('level-earning', format(stats[1]));      // Team Bonus (Renamed Level Income)
         updateText('referral-bonus', format(stats[2]));     // Referral Bonus
-        updateText('rank-earning', format(stats[3]));       // Reward Bonus
-        // (Note: stats[4] is TeamProfitShare, stats[5] is TeamCount)
+        updateText('rank-earning', format(stats[3]));       // Reward Bonus (Renamed Reward)
+        updateText('team-profit-share', format(stats[4]));  // Team Profit Share Bonus (New)
         
         // Dashboard Stats Box Mapping
-        updateText('total-deposit', format(userData.totalStaked));      // Total Staked
-        updateText('total-earned', format(userData.totalIncome));       // Total Income
-        updateText('total-withdrawn', format(userData.totalWithdrawn)); // Total Withdrawn
-        updateText('team-count', stats[5].toString());                  // Team Count
-        updateText('directs-count', userData.activeDirects.toString());  // Active Directs
+        updateText('total-deposit', format(userData.totalStaked));
+        updateText('total-earned', format(userData.totalIncome));
+        updateText('total-withdrawn', format(userData.totalWithdrawn));
+        updateText('team-count', stats[5].toString());
+        updateText('directs-count', userData.activeDirects.toString());
         
         // Dynamic Rank Display
         updateText('rank-display', stats[6].toString());
         
-        // Calculate Withdrawable (Available Balance = Total Income - Total Withdrawn)
-        // Note: ethers.BigNumber ka use karein sub ke liye
-        const totalIncomeBN = userData.totalIncome;
-        const totalWithdrawnBN = userData.totalWithdrawn;
-        const withdrawable = totalIncomeBN.sub(totalWithdrawnBN);
+        // Withdrawable Balance (Available = Total Income - Total Withdrawn)
+        const withdrawable = userData.totalIncome.sub(userData.totalWithdrawn);
         updateText('compounding-balance', format(withdrawable));
-        updateText('cap-balance', format(withdrawable)); // Available Capital
+        updateText('withdraw-balance-display', format(withdrawable));
+        updateText('cap-balance', format(withdrawable));
 
-        // Active Deposit for Compound Power (Total Active Stakes)
+        // Active Deposit for Compound Power
         updateText('active-deposit', format(userData.totalStaked));
         updateText('active-deposit-cp', format(userData.totalStaked));
 
