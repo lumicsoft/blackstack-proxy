@@ -304,9 +304,11 @@ window.fetchBlockchainHistory = async function(categories) {
         const address = await window.signer.getAddress();
         const finalLogs = [];
 
-        // 1. STAKE/DEPOSIT DATA (Contract ke stakes array se)
+        // 1. DEPOSIT DATA (STAKE)
         if (categories.includes('STAKE')) {
             const count = await window.contract.getStakeCount(address);
+            console.log("Stake Count found:", count.toString()); // Yeh check karein console mein
+            
             for (let i = 0; i < count; i++) {
                 const s = await window.contract.getStake(address, i);
                 finalLogs.push({
@@ -319,7 +321,7 @@ window.fetchBlockchainHistory = async function(categories) {
             }
         }
 
-        // 2. INCOME DATA (Contract ke incomes array se)
+        // 2. INCOME DATA
         const incomeLogs = await window.contract.getIncomeHistory(address);
         incomeLogs.forEach(item => {
             if (categories.includes(item.incomeType.toUpperCase())) {
@@ -333,6 +335,7 @@ window.fetchBlockchainHistory = async function(categories) {
             }
         });
 
+        console.log("Final Logs to Display:", finalLogs); // Yeh check karein ki data array mein hai ya nahi
         return finalLogs;
     } catch (e) {
         console.error("History Error:", e);
