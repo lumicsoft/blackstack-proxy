@@ -55,13 +55,12 @@
                 if (!window.contract) throw new Error("Contract not connected");
                 
                 // Mapping: UI Category to Contract Types
-                const typeMapForBackend = {
-                    'deposit': ['STAKE'],
-                    'compounding': ['REINVEST'],
-                    'withdrawal': ['WITHDRAW'],
-                    'income': ['ROI', 'LEVELINCOME', 'REFERRALBONUS', 'REWARD']
-                };
-
+               const typeMapForBackend = {
+    'deposit': ['STAKE'], 
+    'compounding': [], // Contract mein reinvest ka alag event/type nahi hai, toh ise empty rakhein ya 'ROI' map karein
+    'withdrawal': ['WITHDRAW'], 
+    'income': ['ROI', 'LEVELINCOME', 'REFERRALBONUS', 'STAR', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND', 'D. DIAMOND', 'C. DIAMOND', 'TEAMPROFITSHARE']
+};
                 const logs = await window.fetchBlockchainHistory(typeMapForBackend[category]);
 
                 if(!logs || logs.length === 0) {
