@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.insertAdjacentHTML('afterbegin', navHTML);
     document.body.insertAdjacentHTML('beforeend', mobileNavHTML);
     if (window.lucide) window.lucide.createIcons();
-    checkWalletSilently();
+    //checkWalletSilently();
 });
 
 // Menu Toggle Function
