@@ -317,32 +317,36 @@ async function fetchAndDisplayData() {
         
         // 1. Stats fetch karein
         const stats = await window.contract.getUserStats(userAddress);
+        
         // 2. Business Volume fetch karein
         const teamBusinessWei = await window.contract.totalTeamBusiness(userAddress);
         
-        // Convert Wei to Normal Number
-        const formattedBusiness = parseFloat(ethers.utils.formatEther(teamBusinessWei)).toFixed(2);
+        // 3. Data Parsing
+        const teamBusiness = parseFloat(ethers.utils.formatEther(teamBusinessWei));
         const teamCount = parseInt(stats[5].toString());
-        const currentRankName = stats[6]; 
+        const currentRank = stats[6];
 
-        console.log("Stats Loaded:", { teamCount, formattedBusiness, currentRankName });
+        console.log("DEBUG - Team Count:", teamCount);
+        console.log("DEBUG - Business:", teamBusiness);
+        console.log("DEBUG - Current Rank:", currentRank);
 
-        // UI Update
-        if(document.getElementById('team-total-deposit')) document.getElementById('team-total-deposit').innerText = formattedBusiness;
+        // 4. Update UI
+        if(document.getElementById('team-total-deposit')) document.getElementById('team-total-deposit').innerText = teamBusiness.toFixed(2);
         if(document.getElementById('current-team-count')) document.getElementById('current-team-count').innerText = teamCount;
-        
-        // Rank Index find karein (taaki progress bar sahi chale)
-        const rankIndex = rankPlan.findIndex(r => r.name === currentRankName);
-        const safeRankIndex = rankIndex === -1 ? 0 : rankIndex;
 
-        // Progress Bars Update
-        updateLeadershipUI(teamCount, parseFloat(formattedBusiness), safeRankIndex);
+        // 5. Progress Bar Update
+        const rankIndex = rankPlan.findIndex(r => r.name === currentRank);
+        const safeRankIndex = rankIndex === -1 ? 0 : rankIndex;
         
+        // Agar function exist karta hai toh call karein
+        if(typeof updateLeadershipUI === 'function') {
+            updateLeadershipUI(teamCount, teamBusiness, safeRankIndex);
+        }
+
     } catch (error) {
-        console.error("Data Fetch Error:", error);
+        console.error("Data Load Error:", error);
     }
 }
-
 
 
 window.fetchBlockchainHistory = async function(allowedTypes) {
