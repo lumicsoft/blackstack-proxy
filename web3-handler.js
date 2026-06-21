@@ -313,42 +313,38 @@ window.showHistory = async function(category) {
 
 async function fetchAndDisplayData() {
     try {
-        const userAddress = await signer.getAddress();
+        const userAddress = await window.signer.getAddress();
         
-        // Contract se stats call karein
-        // Contract function: getUserStats(address user)
-        // Returns: (ROI, LevelIncome, ReferralBonus, RewardBonus, TeamProfitShare, teamCount, currentRank)
-        const stats = await contract.getUserStats(userAddress);
+        // 1. Stats fetch karein
+        const stats = await window.contract.getUserStats(userAddress);
+        // 2. Business Volume fetch karein
+        const teamBusinessWei = await window.contract.totalTeamBusiness(userAddress);
         
-        // Total Team Business fetch karne ke liye alag variable/mapping use karein
-        // Agar contract mein `totalTeamBusiness` public hai:
-        const teamBusiness = await contract.totalTeamBusiness(userAddress);
-        
-        // Formatting
-        const formattedBusiness = ethers.utils.formatEther(teamBusiness);
-        const teamCount = stats[5].toString();
-        const rankName = stats[6];
+        // Convert Wei to Normal Number
+        const formattedBusiness = parseFloat(ethers.utils.formatEther(teamBusinessWei)).toFixed(2);
+        const teamCount = parseInt(stats[5].toString());
+        const currentRankName = stats[6]; 
+
+        console.log("Stats Loaded:", { teamCount, formattedBusiness, currentRankName });
 
         // UI Update
-        document.getElementById('team-total-deposit').innerText = formattedBusiness;
-        document.getElementById('current-team-count').innerText = teamCount;
+        if(document.getElementById('team-total-deposit')) document.getElementById('team-total-deposit').innerText = formattedBusiness;
+        if(document.getElementById('current-team-count')) document.getElementById('current-team-count').innerText = teamCount;
         
-        // Rank Index nikalna (rankPlan array ke hisab se)
-        const rankIndex = rankPlan.findIndex(r => r.name === rankName);
-        
-        // Progress bar aur Rank UI update karein
-        updateLeadershipUI(parseInt(teamCount), parseFloat(formattedBusiness), rankIndex);
+        // Rank Index find karein (taaki progress bar sahi chale)
+        const rankIndex = rankPlan.findIndex(r => r.name === currentRankName);
+        const safeRankIndex = rankIndex === -1 ? 0 : rankIndex;
+
+        // Progress Bars Update
+        updateLeadershipUI(teamCount, parseFloat(formattedBusiness), safeRankIndex);
         
     } catch (error) {
-        console.error("Data fetch karne mein error:", error);
+        console.error("Data Fetch Error:", error);
     }
 }
 
-// Page load hote hi call karein
-window.onload = async () => {
-    await connectWallet(); // Apka wallet connect function
-    await fetchAndDisplayData();
-};
+
+
 window.fetchBlockchainHistory = async function(allowedTypes) {
     try {
         const address = localStorage.getItem('userAddress');
