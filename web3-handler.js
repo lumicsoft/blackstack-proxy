@@ -299,18 +299,35 @@ async function setupApp(address) {
     showLogoutIcon(address);
     if (path.includes('index1.html')) fetchAllData(address);
 }
-window.showHistory = async function(category) {
-    const container = document.getElementById('history-container');
-    if(!container) return;
-    const typeMap = { 'deposit': ['STAKE'], 'withdrawal': ['WITHDRAW'], 'income': ['ROI'] };
-    const logs = await window.fetchBlockchainHistory(typeMap[category] || []);
-    container.innerHTML = logs.length === 0 ? `<div class="p-10 text-center text-gray-500">No records found.</div>` : logs.map(item => `
-        <div class="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 flex justify-between">
-            <div><h4 class="font-bold ${item.color}">${item.type}</h4></div>
-            <div><span class="text-lg font-black text-white">${item.amount} BLX</span></div>
-        </div>`).join('');
+window.fetchBlockchainHistory = async function(allowedTypes) {
+    try {
+        const address = await window.signer.getAddress();
+        // Contract se raw income history fetch karein
+        const rawHistory = await window.contract.getIncomeHistory(address);
+        
+        // Data format karein
+        return rawHistory.map(item => {
+            const dateObj = new Date(item.timestamp * 1000);
+            return {
+                type: item.incomeType.toUpperCase(), // 'ROI', 'LEVELINCOME', etc.
+                amount: parseFloat(ethers.utils.formatEther(item.amount)).toFixed(2),
+                date: dateObj.toLocaleDateString(),
+                time: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                detail: item.incomeType
+            };
+        }).filter(item => {
+            // Mapping: Contract vs UI types
+            if (allowedTypes.includes('DEPOSIT') && item.type === 'STAKE') return true;
+            if (allowedTypes.includes('ROI_INCOME') && item.type === 'ROI') return true;
+            if (allowedTypes.includes('LEVEL_INCOME') && (item.type === 'LEVELINCOME' || item.type === 'REFERRALBONUS')) return true;
+            if (allowedTypes.includes('WITHDRAW') && item.type === 'WITHDRAW') return true;
+            return false;
+        });
+    } catch (e) {
+        console.error("Fetch Error:", e);
+        return [];
+    }
 }
-
 async function fetchAndDisplayData() {
     console.log("Fetching Leadership Data...");
     try {
