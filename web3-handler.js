@@ -312,52 +312,48 @@ window.showHistory = async function(category) {
 }
 
 async function fetchAndDisplayData() {
+    console.log("Fetching Leadership Data...");
     try {
-        if (!window.signer || !window.contract) {
-            console.warn("Contract not ready, retrying...");
+        if (!window.contract || !window.signer) {
+            console.error("Contract/Signer not ready");
             return;
         }
 
         const userAddress = await window.signer.getAddress();
         
-        // 1. Stats fetch karein
+        // 1. Force Dashboard Sync
+        if (typeof window.fetchAllData === 'function') {
+            await window.fetchAllData(userAddress);
+        }
+
+        // 2. Contract se data layein
         const stats = await window.contract.getUserStats(userAddress);
-        
-        // 2. Business Volume fetch karein
         const teamBusinessWei = await window.contract.totalTeamBusiness(userAddress);
         
-        // 3. Data Parsing
+        // 3. Data format karein
         const teamBusiness = parseFloat(ethers.utils.formatEther(teamBusinessWei));
         const teamCount = parseInt(stats[5].toString());
-        const currentRank = stats[6];
+        const currentRank = stats[6]; // Contract ka rank string
 
-        console.log("DEBUG - Team Count:", teamCount);
-        console.log("DEBUG - Business:", teamBusiness);
-        console.log("DEBUG - Current Rank:", currentRank);
+        console.log("Stats Loaded:", { teamCount, teamBusiness, currentRank });
 
-        // 4. Update UI (HTML Elements)
+        // 4. UI Update (Leadership Specific)
         if(document.getElementById('team-total-deposit')) 
             document.getElementById('team-total-deposit').innerText = teamBusiness.toFixed(2);
         if(document.getElementById('current-team-count')) 
             document.getElementById('current-team-count').innerText = teamCount;
-        
-        // Agar Reward Bonus display karna hai toh stats[3] (Reward Index)
-        if(document.getElementById('rank-reward-available'))
+        if(document.getElementById('rank-reward-available')) 
             document.getElementById('rank-reward-available').innerText = parseFloat(ethers.utils.formatEther(stats[3])).toFixed(2);
 
-        // 5. Progress Bar & Rank UI Update
-        // rankPlan ko window object se access karenge
+        // 5. Progress Bar Update
         if(window.rankPlan) {
-            const rankIndex = window.rankPlan.findIndex(r => r.name === currentRank);
+            const rankIndex = window.rankPlan.findIndex(r => r.name.toLowerCase() === currentRank.toLowerCase());
             const safeRankIndex = rankIndex === -1 ? 0 : rankIndex;
             
-            if(typeof updateLeadershipUI === 'function') {
-                updateLeadershipUI(teamCount, teamBusiness, safeRankIndex);
+            if(typeof window.updateLeadershipUI === 'function') {
+                window.updateLeadershipUI(teamCount, teamBusiness, safeRankIndex);
             }
-        } else {
-            console.error("rankPlan is not defined in window object!");
         }
-
     } catch (error) {
         console.error("Data Load Error:", error);
     }
