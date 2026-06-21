@@ -304,24 +304,22 @@ window.fetchBlockchainHistory = async function(categories) {
         const address = await window.signer.getAddress();
         const finalLogs = [];
 
-        // 1. DEPOSIT DATA (stakes array)
-        if (categories.includes('DEPOSIT')) {
+        // 1. STAKE DATA (Name check: 'DEPOSIT' हटाकर 'STAKE' किया)
+        if (categories.includes('STAKE')) { 
             const count = await window.contract.getStakeCount(address);
             console.log("Total Stakes found:", count.toString());
 
             for (let i = 0; i < count; i++) {
                 const s = await window.contract.getStake(address, i);
-                console.log(`Stake Data [${i}]:`, s); // Debug के लिए
                 
-                // स्ट्रक्ट डेटा को सुरक्षित तरीके से निकालना (Object या Array दोनों सपोर्टेड)
+                // डेटा मैपिंग - कॉन्ट्रैक्ट के अनुसार
                 const amount = s.amount !== undefined ? s.amount : s[0];
                 const startTime = s.startTime !== undefined ? s.startTime : s[1];
                 const withBurn = s.withBurn !== undefined ? s.withBurn : s[4];
 
                 if (amount) {
                     finalLogs.push({
-                        type: 'DEPOSIT',
-                        // BigNumber को string में कन्वर्ट करके formatUnits में डालें
+                        type: 'STAKE', // UI में भी 'STAKE' दिखेगा
                         amount: parseFloat(ethers.utils.formatUnits(amount.toString(), 18)).toFixed(2),
                         date: new Date(startTime * 1000).toLocaleDateString(),
                         time: new Date(startTime * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
@@ -331,11 +329,10 @@ window.fetchBlockchainHistory = async function(categories) {
             }
         }
 
-        // 2. INCOME DATA (incomes array)
+        // 2. INCOME DATA (नाम चेक)
         const incomeLogs = await window.contract.getIncomeHistory(address);
         if (incomeLogs && incomeLogs.length > 0) {
             incomeLogs.forEach(item => {
-                // यहाँ item[0]=type, item[1]=amount, item[2]=timestamp
                 const incomeType = item.incomeType || item[0];
                 const amount = item.amount || item[1];
                 const timestamp = item.timestamp || item[2];
