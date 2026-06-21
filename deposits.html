@@ -49,7 +49,7 @@
                     <div class="p-3 bg-white/5 rounded-xl border border-white/10"><i data-lucide="database" class="text-yellow-500 w-6 h-6"></i></div>
                     <p class="label-text">Total Active Capital</p>
                 </div>
-                <h3 class="amount-text orbitron">blx<span id="total-active-capital">0.00</span></h3>
+                <h3 class="amount-text orbitron">$<span id="total-active-capital">0.00</span></h3>
             </div></div>
 
             <div class="premium-card"><div class="inner-content stat-box">
@@ -57,7 +57,7 @@
                     <div class="p-3 bg-white/5 rounded-xl border border-white/10"><i data-lucide="trending-up" class="text-green-500 w-6 h-6"></i></div>
                     <p class="label-text">Daily Profit (0.23%)</p>
                 </div>
-                <h3 class="amount-text orbitron text-green-400">blx<span id="total-daily-profit">0.00</span></h3>
+                <h3 class="amount-text orbitron text-green-400">$<span id="total-daily-profit">0.00</span></h3>
             </div></div>
         </div>
 
@@ -120,11 +120,11 @@ async function loadActiveDeposits() {
                 <div class="premium-card">
                     <div class="inner-content !block p-6">
                         <div class="flex justify-between mb-4">
-                            <h3 class="text-xl font-black orbitron text-white">blxblx{amount.toLocaleString()}</h3>
-                            <span class="status-badge">blx{s.withBurn ? 'BURN' : 'NORMAL'}</span>
+                            <h3 class="text-xl font-black orbitron text-white">$${amount.toLocaleString()}</h3>
+                            <span class="status-badge">${s.withBurn ? 'BURN' : 'NORMAL'}</span>
                         </div>
-                        <div class="progress-container"><div class="progress-bar-node" style="width: blx{progress}%"></div></div>
-                        <p class="text-[9px] text-gray-500 mt-2 uppercase">Earned: blxblx{earned.toFixed(2)} / blxblx{maxPayout.toFixed(2)}</p>
+                        <div class="progress-container"><div class="progress-bar-node" style="width: ${progress}%"></div></div>
+                        <p class="text-[9px] text-gray-500 mt-2 uppercase">Earned: $${earned.toFixed(2)} / $${maxPayout.toFixed(2)}</p>
                     </div>
                 </div>`;
             }
@@ -139,7 +139,7 @@ async function loadActiveDeposits() {
 
     } catch (err) {
         console.error("Critical Error in loadActiveDeposits:", err);
-        grid.innerHTML = `<div class="col-span-full text-center py-20 text-red-500 text-xs">Error: blx{err.message}</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-20 text-red-500 text-xs">Error: ${err.message}</div>`;
     }
 }
         
