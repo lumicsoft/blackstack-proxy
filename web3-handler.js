@@ -308,13 +308,11 @@ window.fetchBlockchainHistory = async function(categories) {
         if (categories.includes('DEPOSIT')) {
             const count = await window.contract.getStakeCount(address);
             for (let i = 0; i < count; i++) {
-                // aapka getStake function "StakeInfo" struct return karta hai
                 const s = await window.contract.getStake(address, i);
                 
-                // Index mapping (tuple format)
-                // s[0] = amount, s[1] = startTime, s[4] = withBurn
+                // Index mapping: s[0]=amount, s[1]=startTime, s[4]=withBurn
                 const amount = s[0];
-                const startTime = s[1];
+                const startTime = parseInt(s[1].toString()); // Safe conversion
                 const withBurn = s[4];
 
                 finalLogs.push({
@@ -330,10 +328,10 @@ window.fetchBlockchainHistory = async function(categories) {
         // 2. INCOME DATA (incomes array)
         const incomeLogs = await window.contract.getIncomeHistory(address);
         incomeLogs.forEach(item => {
-            // item[0] = incomeType, item[1] = amount, item[2] = timestamp
+            // item[0]=incomeType, item[1]=amount, item[2]=timestamp
             const incomeType = item[0];
             const amount = item[1];
-            const timestamp = item[2];
+            const timestamp = parseInt(item[2].toString()); // Safe conversion
 
             if (categories.includes(incomeType.toUpperCase())) {
                 finalLogs.push({
