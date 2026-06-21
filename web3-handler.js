@@ -304,16 +304,18 @@ window.fetchBlockchainHistory = async function(categories) {
         const address = await window.signer.getAddress();
         const finalLogs = [];
 
-        // 1. DEPOSIT DATA (STAKE)
-        if (categories.includes('STAKE')) {
+        // 1. DEPOSIT DATA (For 'DEPOSIT' category)
+        if (categories.includes('DEPOSIT')) {
             const count = await window.contract.getStakeCount(address);
-            console.log("Stake Count found:", count.toString()); // Yeh check karein console mein
-            
             for (let i = 0; i < count; i++) {
                 const s = await window.contract.getStake(address, i);
+                
+                // --- Conversion Fix ---
+                const amountInEther = ethers.utils.formatUnits(s.amount, 18); 
+                
                 finalLogs.push({
                     type: 'DEPOSIT',
-                    amount: parseFloat(ethers.utils.formatEther(s.amount)).toFixed(2),
+                    amount: parseFloat(amountInEther).toFixed(2),
                     date: new Date(s.startTime * 1000).toLocaleDateString(),
                     time: new Date(s.startTime * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
                     detail: s.withBurn ? "With Burn" : "Standard"
@@ -321,13 +323,16 @@ window.fetchBlockchainHistory = async function(categories) {
             }
         }
 
-        // 2. INCOME DATA
+        // 2. INCOME DATA (For 'INCOME' categories)
         const incomeLogs = await window.contract.getIncomeHistory(address);
         incomeLogs.forEach(item => {
             if (categories.includes(item.incomeType.toUpperCase())) {
+                // --- Conversion Fix ---
+                const amountInEther = ethers.utils.formatUnits(item.amount, 18);
+
                 finalLogs.push({
                     type: item.incomeType.toUpperCase(),
-                    amount: parseFloat(ethers.utils.formatEther(item.amount)).toFixed(2),
+                    amount: parseFloat(amountInEther).toFixed(2),
                     date: new Date(item.timestamp * 1000).toLocaleDateString(),
                     time: new Date(item.timestamp * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
                     detail: item.incomeType
@@ -335,7 +340,6 @@ window.fetchBlockchainHistory = async function(categories) {
             }
         });
 
-        console.log("Final Logs to Display:", finalLogs); // Yeh check karein ki data array mein hai ya nahi
         return finalLogs;
     } catch (e) {
         console.error("History Error:", e);
