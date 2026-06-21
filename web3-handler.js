@@ -304,38 +304,47 @@ window.fetchBlockchainHistory = async function(categories) {
         const address = await window.signer.getAddress();
         const finalLogs = [];
 
-        // 1. DEPOSIT DATA (For 'DEPOSIT' category)
+        // 1. DEPOSIT DATA (Using Array Indexing for Tuple)
         if (categories.includes('DEPOSIT')) {
             const count = await window.contract.getStakeCount(address);
             for (let i = 0; i < count; i++) {
                 const s = await window.contract.getStake(address, i);
                 
-                // --- Conversion Fix ---
-                const amountInEther = ethers.utils.formatUnits(s.amount, 18); 
+                // Array Mapping based on your contract struct:
+                // s[0] = amount, s[1] = startTime, s[4] = withBurn
+                const amount = s[0]; 
+                const startTime = s[1];
+                const withBurn = s[4];
+
+                const amountInEther = ethers.utils.formatUnits(amount, 18); 
                 
                 finalLogs.push({
                     type: 'DEPOSIT',
                     amount: parseFloat(amountInEther).toFixed(2),
-                    date: new Date(s.startTime * 1000).toLocaleDateString(),
-                    time: new Date(s.startTime * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-                    detail: s.withBurn ? "With Burn" : "Standard"
+                    date: new Date(startTime * 1000).toLocaleDateString(),
+                    time: new Date(startTime * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+                    detail: withBurn ? "With Burn" : "Standard"
                 });
             }
         }
 
-        // 2. INCOME DATA (For 'INCOME' categories)
+        // 2. INCOME DATA (Using Array Indexing for Tuple)
         const incomeLogs = await window.contract.getIncomeHistory(address);
         incomeLogs.forEach(item => {
-            if (categories.includes(item.incomeType.toUpperCase())) {
-                // --- Conversion Fix ---
-                const amountInEther = ethers.utils.formatUnits(item.amount, 18);
+            // incomeType (item[0]), amount (item[1]), timestamp (item[2])
+            const incomeType = item[0] || item.incomeType;
+            const amount = item[1] || item.amount;
+            const timestamp = item[2] || item.timestamp;
+
+            if (categories.includes(incomeType.toUpperCase())) {
+                const amountInEther = ethers.utils.formatUnits(amount, 18);
 
                 finalLogs.push({
-                    type: item.incomeType.toUpperCase(),
+                    type: incomeType.toUpperCase(),
                     amount: parseFloat(amountInEther).toFixed(2),
-                    date: new Date(item.timestamp * 1000).toLocaleDateString(),
-                    time: new Date(item.timestamp * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-                    detail: item.incomeType
+                    date: new Date(timestamp * 1000).toLocaleDateString(),
+                    time: new Date(timestamp * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+                    detail: incomeType
                 });
             }
         });
