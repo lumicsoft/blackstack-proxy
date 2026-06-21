@@ -101,37 +101,34 @@
     <script>
         lucide.createIcons();
 
-        // Contract ke hisab se Ranks mapping
-        const rankPlan = [
-    { name: "None", count: 0, vol: 0 },
-    { name: "Star", count: 10, vol: 1000 },
-    { name: "Silver", count: 50, vol: 5000 },
-    { name: "Gold", count: 100, vol: 20000 },
-    { name: "Platinum", count: 300, vol: 50000 },
-    { name: "Diamond", count: 1000, vol: 100000 },
-    { name: "D. Diamond", count: 3000, vol: 1500000 },
-    { name: "C. Diamond", count: 5000, vol: 2000000 }
-];
+        window.rankPlan = [
+            { name: "None", count: 0, vol: 0 },
+            { name: "Star", count: 10, vol: 1000 },
+            { name: "Silver", count: 50, vol: 5000 },
+            { name: "Gold", count: 100, vol: 20000 },
+            { name: "Platinum", count: 300, vol: 50000 },
+            { name: "Diamond", count: 1000, vol: 100000 },
+            { name: "D. Diamond", count: 3000, vol: 1500000 },
+            { name: "C. Diamond", count: 5000, vol: 2000000 }
+        ];
 
-        // Is function ko aap apne web3-handler.js mein call karein
-        function updateLeadershipUI(teamCount, totalVolume, currentRankIndex) {
-            const currentRank = rankPlan[currentRankIndex] || rankPlan[0];
-            const nextRank = rankPlan[currentRankIndex + 1] || rankPlan[7];
+        window.updateLeadershipUI = function(teamCount, totalVolume, currentRankIndex) {
+            const currentRank = window.rankPlan[currentRankIndex] || window.rankPlan[0];
+            const nextRank = window.rankPlan[currentRankIndex + 1] || window.rankPlan[7];
 
             document.getElementById('rank-display').innerText = currentRank.name;
             document.getElementById('next-rank-display').innerText = nextRank.name;
-            
             document.getElementById('curr-count').innerText = teamCount;
             document.getElementById('target-count').innerText = nextRank.count;
-            document.getElementById('curr-vol').innerText = totalVolume;
-            document.getElementById('target-vol').innerText = nextRank.vol;
+            document.getElementById('curr-vol').innerText = totalVolume.toLocaleString();
+            document.getElementById('target-vol').innerText = nextRank.vol.toLocaleString();
 
-            // Progress Calculation
-            const countPerc = (teamCount / nextRank.count) * 100;
-            const volPerc = (totalVolume / nextRank.vol) * 100;
+            const countPerc = nextRank.count > 0 ? (teamCount / nextRank.count) * 100 : 0;
+            const volPerc = nextRank.vol > 0 ? (totalVolume / nextRank.vol) * 100 : 0;
+            
             document.getElementById('team-count-bar').style.width = Math.min(countPerc, 100) + "%";
             document.getElementById('team-volume-bar').style.width = Math.min(volPerc, 100) + "%";
-        }
+        };
     </script>
 </body>
 </html>
