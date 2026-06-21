@@ -307,42 +307,50 @@ window.fetchBlockchainHistory = async function(categories) {
         // 1. DEPOSIT DATA (stakes array)
         if (categories.includes('DEPOSIT')) {
             const count = await window.contract.getStakeCount(address);
+            console.log("Total Stakes found:", count.toString());
+
             for (let i = 0; i < count; i++) {
                 const s = await window.contract.getStake(address, i);
+                console.log(`Stake Data [${i}]:`, s); // Debug के लिए
                 
-                // Index mapping: s[0]=amount, s[1]=startTime, s[4]=withBurn
-                const amount = s[0];
-                const startTime = parseInt(s[1].toString()); // Safe conversion
-                const withBurn = s[4];
+                // स्ट्रक्ट डेटा को सुरक्षित तरीके से निकालना (Object या Array दोनों सपोर्टेड)
+                const amount = s.amount !== undefined ? s.amount : s[0];
+                const startTime = s.startTime !== undefined ? s.startTime : s[1];
+                const withBurn = s.withBurn !== undefined ? s.withBurn : s[4];
 
-                finalLogs.push({
-                    type: 'DEPOSIT',
-                    amount: parseFloat(ethers.utils.formatUnits(amount, 18)).toFixed(2),
-                    date: new Date(startTime * 1000).toLocaleDateString(),
-                    time: new Date(startTime * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-                    detail: withBurn ? "With Burn" : "Standard"
-                });
+                if (amount) {
+                    finalLogs.push({
+                        type: 'DEPOSIT',
+                        // BigNumber को string में कन्वर्ट करके formatUnits में डालें
+                        amount: parseFloat(ethers.utils.formatUnits(amount.toString(), 18)).toFixed(2),
+                        date: new Date(startTime * 1000).toLocaleDateString(),
+                        time: new Date(startTime * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+                        detail: withBurn ? "With Burn" : "Standard"
+                    });
+                }
             }
         }
 
         // 2. INCOME DATA (incomes array)
         const incomeLogs = await window.contract.getIncomeHistory(address);
-        incomeLogs.forEach(item => {
-            // item[0]=incomeType, item[1]=amount, item[2]=timestamp
-            const incomeType = item[0];
-            const amount = item[1];
-            const timestamp = parseInt(item[2].toString()); // Safe conversion
+        if (incomeLogs && incomeLogs.length > 0) {
+            incomeLogs.forEach(item => {
+                // यहाँ item[0]=type, item[1]=amount, item[2]=timestamp
+                const incomeType = item.incomeType || item[0];
+                const amount = item.amount || item[1];
+                const timestamp = item.timestamp || item[2];
 
-            if (categories.includes(incomeType.toUpperCase())) {
-                finalLogs.push({
-                    type: incomeType.toUpperCase(),
-                    amount: parseFloat(ethers.utils.formatUnits(amount, 18)).toFixed(2),
-                    date: new Date(timestamp * 1000).toLocaleDateString(),
-                    time: new Date(timestamp * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-                    detail: incomeType
-                });
-            }
-        });
+                if (categories.includes(incomeType.toUpperCase())) {
+                    finalLogs.push({
+                        type: incomeType.toUpperCase(),
+                        amount: parseFloat(ethers.utils.formatUnits(amount.toString(), 18)).toFixed(2),
+                        date: new Date(timestamp * 1000).toLocaleDateString(),
+                        time: new Date(timestamp * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+                        detail: incomeType
+                    });
+                }
+            });
+        }
 
         return finalLogs;
     } catch (e) {
