@@ -404,14 +404,7 @@ async function fetchAndDisplayData() {
     }
 }
 
-window.fetchBlockchainHistory = async function(allowedTypes) {
-    try {
-        const address = localStorage.getItem('userAddress');
-        const rawHistory = await contract.getIncomeHistory(address);
-        return rawHistory.filter(item => allowedTypes.includes(item.incomeType.toUpperCase()))
-            .map(item => ({ type: item.incomeType, amount: format(item.amount), color: item.incomeType === 'WITHDRAW' ? 'text-red-400' : 'text-green-400' }));
-    } catch (e) { return []; }
-}
+
 // --- UPDATED fetchAllData FUNCTION ---
 async function fetchAllData(address) {
     const refUrl = `${window.location.origin}/register.html?ref=${address}`; 
