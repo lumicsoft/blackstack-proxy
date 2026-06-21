@@ -304,23 +304,22 @@ window.fetchBlockchainHistory = async function(categories) {
         const address = await window.signer.getAddress();
         const finalLogs = [];
 
-        // 1. DEPOSIT DATA (Using Array Indexing for Tuple)
+        // 1. DEPOSIT DATA (stakes array)
         if (categories.includes('DEPOSIT')) {
             const count = await window.contract.getStakeCount(address);
             for (let i = 0; i < count; i++) {
+                // aapka getStake function "StakeInfo" struct return karta hai
                 const s = await window.contract.getStake(address, i);
                 
-                // Array Mapping based on your contract struct:
+                // Index mapping (tuple format)
                 // s[0] = amount, s[1] = startTime, s[4] = withBurn
-                const amount = s[0]; 
+                const amount = s[0];
                 const startTime = s[1];
                 const withBurn = s[4];
 
-                const amountInEther = ethers.utils.formatUnits(amount, 18); 
-                
                 finalLogs.push({
                     type: 'DEPOSIT',
-                    amount: parseFloat(amountInEther).toFixed(2),
+                    amount: parseFloat(ethers.utils.formatUnits(amount, 18)).toFixed(2),
                     date: new Date(startTime * 1000).toLocaleDateString(),
                     time: new Date(startTime * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
                     detail: withBurn ? "With Burn" : "Standard"
@@ -328,20 +327,18 @@ window.fetchBlockchainHistory = async function(categories) {
             }
         }
 
-        // 2. INCOME DATA (Using Array Indexing for Tuple)
+        // 2. INCOME DATA (incomes array)
         const incomeLogs = await window.contract.getIncomeHistory(address);
         incomeLogs.forEach(item => {
-            // incomeType (item[0]), amount (item[1]), timestamp (item[2])
-            const incomeType = item[0] || item.incomeType;
-            const amount = item[1] || item.amount;
-            const timestamp = item[2] || item.timestamp;
+            // item[0] = incomeType, item[1] = amount, item[2] = timestamp
+            const incomeType = item[0];
+            const amount = item[1];
+            const timestamp = item[2];
 
             if (categories.includes(incomeType.toUpperCase())) {
-                const amountInEther = ethers.utils.formatUnits(amount, 18);
-
                 finalLogs.push({
                     type: incomeType.toUpperCase(),
-                    amount: parseFloat(amountInEther).toFixed(2),
+                    amount: parseFloat(ethers.utils.formatUnits(amount, 18)).toFixed(2),
                     date: new Date(timestamp * 1000).toLocaleDateString(),
                     time: new Date(timestamp * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
                     detail: incomeType
@@ -351,10 +348,11 @@ window.fetchBlockchainHistory = async function(categories) {
 
         return finalLogs;
     } catch (e) {
-        console.error("History Error:", e);
+        console.error("DEBUG: History Error Trace:", e);
         return [];
     }
 }
+
 async function fetchAndDisplayData() {
     console.log("Fetching Leadership Data...");
     try {
