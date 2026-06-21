@@ -309,6 +309,7 @@ window.showHistory = async function(category) {
             <div><span class="text-lg font-black text-white">${item.amount} BLX</span></div>
         </div>`).join('');
 }
+
 async function fetchAndDisplayData() {
     try {
         const userAddress = await signer.getAddress();
