@@ -309,7 +309,44 @@ window.showHistory = async function(category) {
             <div><span class="text-lg font-black text-white">${item.amount} BLX</span></div>
         </div>`).join('');
 }
+async function fetchAndDisplayData() {
+    try {
+        const userAddress = await signer.getAddress();
+        
+        // Contract se stats call karein
+        // Contract function: getUserStats(address user)
+        // Returns: (ROI, LevelIncome, ReferralBonus, RewardBonus, TeamProfitShare, teamCount, currentRank)
+        const stats = await contract.getUserStats(userAddress);
+        
+        // Total Team Business fetch karne ke liye alag variable/mapping use karein
+        // Agar contract mein `totalTeamBusiness` public hai:
+        const teamBusiness = await contract.totalTeamBusiness(userAddress);
+        
+        // Formatting
+        const formattedBusiness = ethers.utils.formatEther(teamBusiness);
+        const teamCount = stats[5].toString();
+        const rankName = stats[6];
 
+        // UI Update
+        document.getElementById('team-total-deposit').innerText = formattedBusiness;
+        document.getElementById('current-team-count').innerText = teamCount;
+        
+        // Rank Index nikalna (rankPlan array ke hisab se)
+        const rankIndex = rankPlan.findIndex(r => r.name === rankName);
+        
+        // Progress bar aur Rank UI update karein
+        updateLeadershipUI(parseInt(teamCount), parseFloat(formattedBusiness), rankIndex);
+        
+    } catch (error) {
+        console.error("Data fetch karne mein error:", error);
+    }
+}
+
+// Page load hote hi call karein
+window.onload = async () => {
+    await connectWallet(); // Apka wallet connect function
+    await fetchAndDisplayData();
+};
 window.fetchBlockchainHistory = async function(allowedTypes) {
     try {
         const address = localStorage.getItem('userAddress');
