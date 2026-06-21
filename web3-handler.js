@@ -7,14 +7,14 @@ const TESTNET_CHAIN_ID = 97;
 
 // --- RANK CONFIG (Star1 to Master King) ---
 const RANK_DETAILS = [
-    { name: "NONE", roi: "0%", targetTeam: 0, targetVolume: 0 },
-    { name: "Star1", roi: "1.00%", targetTeam: 1, targetVolume: 5 },
-    { name: "Star2", roi: "2.00%", targetTeam: 2, targetVolume: 10 },
-    { name: "Star3", roi: "3.00%", targetTeam: 3, targetVolume: 25 },
-    { name: "Star4", roi: "4.00%", targetTeam: 4, targetVolume: 50},
-    { name: "Star5", roi: "5.00%", targetTeam: 5, targetVolume: 100 },
-    { name: "Kings Star", roi: "7.00%", targetTeam: 6, targetVolume: 500},
-    { name: "Master King", roi: "7.50%", targetTeam: 7, targetVolume: 1000 }
+     { name: "None", count: 0, vol: 0 },
+            { name: "Star", count: 10, vol: 1000 },
+            { name: "Silver", count: 50, vol: 5000 },
+            { name: "Gold", count: 100, vol: 20000 },
+            { name: "Platinum", count: 300, vol: 50000 },
+            { name: "Diamond", count: 1000, vol: 100000 },
+            { name: "D. Diamond", count: 3000, vol: 1500000 },
+            { name: "C. Diamond", count: 5000, vol: 2000000 }
 ];
 
 const CONTRACT_ABI = [
