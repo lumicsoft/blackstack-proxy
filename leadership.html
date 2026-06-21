@@ -4,22 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leadership</title>
-    
     <link rel="stylesheet" href="style1.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <style>
-        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #FFD700, #B8860B); transition: width 1s ease-in-out; }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #FFD700, #B8860B); transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 999px; }
     </style>
 </head>
 <body class="p-4 md:p-10">
-
     <div id="nav-placeholder"></div>
-
     <main class="max-w-7xl mx-auto space-y-6 pt-10 pb-20 relative z-10">
-        
         <div class="mb-8">
             <h1 class="text-3xl font-black orbitron italic uppercase tracking-tighter">Leadership <span class="text-yellow-500">Overview</span></h1>
             <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">Based on Contract Ranks</p>
@@ -29,14 +24,13 @@
             <div class="premium-card"><div class="inner-content stat-box">
                 <div class="flex items-center gap-4">
                     <div class="p-3 bg-white/5 rounded-xl border border-white/10 text-green-500"><i data-lucide="shield-check"></i></div>
-                    <div><p class="label-text">Your Current Rank</p><h2 id="rank-display" class="text-xl font-black orbitron">None</h2></div>
+                    <div><p class="label-text">Your Current Rank</p><h2 id="rank-display" class="text-xl font-black orbitron">Loading...</h2></div>
                 </div>
             </div></div>
-
             <div class="premium-card"><div class="inner-content stat-box">
                 <div class="flex items-center gap-4">
                     <div class="p-3 bg-white/5 rounded-xl border border-white/10 text-yellow-500"><i data-lucide="award"></i></div>
-                    <div><p class="label-text">Next Target Rank</p><h2 id="next-rank-display" class="text-xl font-black orbitron italic text-yellow-500">Star</h2></div>
+                    <div><p class="label-text">Next Target Rank</p><h2 id="next-rank-display" class="text-xl font-black orbitron italic text-yellow-500">-</h2></div>
                 </div>
             </div></div>
         </div>
@@ -64,33 +58,13 @@
             <h3 class="text-sm font-black orbitron uppercase italic text-yellow-500 mb-6 flex items-center gap-2"><i data-lucide="zap" class="w-4 h-4"></i> Milestone Progress</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="space-y-3">
-                    <div class="flex justify-between items-end"><p class="label-text">Team Count</p><p class="orbitron text-xs"><span id="curr-count">0</span> / <span id="target-count">10</span></p></div>
+                    <div class="flex justify-between items-end"><p class="label-text">Team Count</p><p class="orbitron text-xs"><span id="curr-count">0</span> / <span id="target-count">0</span></p></div>
                     <div class="h-2 bg-white/5 rounded-full overflow-hidden"><div id="team-count-bar" class="progress-bar-fill" style="width: 0%"></div></div>
                 </div>
                 <div class="space-y-3">
-                    <div class="flex justify-between items-end"><p class="label-text">Business Volume</p><p class="orbitron text-xs"><span id="curr-vol">0</span> / <span id="target-vol">1000</span></p></div>
+                    <div class="flex justify-between items-end"><p class="label-text">Business Volume</p><p class="orbitron text-xs"><span id="curr-vol">0</span> / <span id="target-vol">0</span></p></div>
                     <div class="h-2 bg-white/5 rounded-full overflow-hidden"><div id="team-volume-bar" class="progress-bar-fill" style="width: 0%"></div></div>
                 </div>
-            </div>
-        </div></div>
-
-        <div class="premium-card"><div class="inner-content !block">
-            <h3 class="text-sm font-black orbitron uppercase italic text-yellow-500 mb-6 flex items-center gap-2">
-                <i data-lucide="list" class="w-4 h-4"></i> Leadership Rank Chart
-            </h3>
-            <div class="overflow-x-auto">
-                <table class="luxury-table w-full text-left">
-                    <thead><tr class="text-gray-500 text-[10px] uppercase"><th>Rank</th><th>Team Count</th><th>Business Volume</th></tr></thead>
-                    <tbody class="text-gray-400">
-                        <tr><td class="text-white font-bold">Star</td><td>10</td><td>1,000</td></tr>
-                        <tr><td class="text-white font-bold">Silver</td><td>50</td><td>5,000</td></tr>
-                        <tr><td class="text-white font-bold">Gold</td><td>100</td><td>20,000</td></tr>
-                        <tr><td class="text-white font-bold">Platinum</td><td>300</td><td>50,000</td></tr>
-                        <tr><td class="text-white font-bold">Diamond</td><td>1,000</td><td>100,000</td></tr>
-                        <tr><td class="text-white font-bold">D. Diamond</td><td>3,000</td><td>1,500,000</td></tr>
-                        <tr><td class="text-white font-bold">C. Diamond</td><td>5,000</td><td>2,000,000</td></tr>
-                    </tbody>
-                </table>
             </div>
         </div></div>
     </main>
@@ -123,12 +97,44 @@
             document.getElementById('curr-vol').innerText = totalVolume.toLocaleString();
             document.getElementById('target-vol').innerText = nextRank.vol.toLocaleString();
 
-            const countPerc = nextRank.count > 0 ? (teamCount / nextRank.count) * 100 : 0;
-            const volPerc = nextRank.vol > 0 ? (totalVolume / nextRank.vol) * 100 : 0;
+            // Progress Bar Logic: (Current/Target) * 100
+            const countPerc = nextRank.count > 0 ? (teamCount / nextRank.count) * 100 : 100;
+            const volPerc = nextRank.vol > 0 ? (totalVolume / nextRank.vol) * 100 : 100;
             
             document.getElementById('team-count-bar').style.width = Math.min(countPerc, 100) + "%";
             document.getElementById('team-volume-bar').style.width = Math.min(volPerc, 100) + "%";
         };
+
+        // AUTO-FETCH LOGIC
+        window.addEventListener('load', () => {
+            const check = setInterval(async () => {
+                if (window.contract && window.signer) {
+                    clearInterval(check);
+                    try {
+                        const addr = await window.signer.getAddress();
+                        const stats = await window.contract.getUserStats(addr);
+                        const teamBusiness = parseFloat(ethers.utils.formatEther(await window.contract.totalTeamBusiness(addr)));
+                        const userData = await window.contract.users(addr);
+                        
+                        // Update Fields
+                        document.getElementById('directs-quali').innerText = userData.activeDirects.toString();
+                        document.getElementById('team-total-deposit').innerText = teamBusiness.toFixed(2);
+                        document.getElementById('current-team-count').innerText = stats[5].toString();
+                        
+                        // Set Rank Index
+                        const rankIndex = window.rankPlan.findIndex(r => r.name.toLowerCase() === stats[6].toLowerCase());
+                        window.updateLeadershipUI(parseInt(stats[5]), teamBusiness, rankIndex === -1 ? 0 : rankIndex);
+                        
+                        // Dynamic Reward Fetch (Handling reward from contract)
+                        try {
+                            const reward = await window.contract.getIncomeByType(addr, stats[6]);
+                            document.getElementById('rank-reward-available').innerText = parseFloat(ethers.utils.formatEther(reward)).toFixed(2);
+                        } catch(e) { document.getElementById('rank-reward-available').innerText = "0.00"; }
+                        
+                    } catch(e) { console.error("Leadership Data Error:", e); }
+                }
+            }, 500);
+        });
     </script>
 </body>
 </html>
