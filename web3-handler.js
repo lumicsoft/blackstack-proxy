@@ -299,32 +299,43 @@ async function setupApp(address) {
     showLogoutIcon(address);
     if (path.includes('index1.html')) fetchAllData(address);
 }
-window.fetchBlockchainHistory = async function(allowedTypes) {
+window.fetchBlockchainHistory = async function(categories) {
     try {
         const address = await window.signer.getAddress();
-        // Contract se raw income history fetch karein
-        const rawHistory = await window.contract.getIncomeHistory(address);
-        
-        // Data format karein
-        return rawHistory.map(item => {
-            const dateObj = new Date(item.timestamp * 1000);
-            return {
-                type: item.incomeType.toUpperCase(), // 'ROI', 'LEVELINCOME', etc.
-                amount: parseFloat(ethers.utils.formatEther(item.amount)).toFixed(2),
-                date: dateObj.toLocaleDateString(),
-                time: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                detail: item.incomeType
-            };
-        }).filter(item => {
-            // Mapping: Contract vs UI types
-            if (allowedTypes.includes('DEPOSIT') && item.type === 'STAKE') return true;
-            if (allowedTypes.includes('ROI_INCOME') && item.type === 'ROI') return true;
-            if (allowedTypes.includes('LEVEL_INCOME') && (item.type === 'LEVELINCOME' || item.type === 'REFERRALBONUS')) return true;
-            if (allowedTypes.includes('WITHDRAW') && item.type === 'WITHDRAW') return true;
-            return false;
+        const finalLogs = [];
+
+        // 1. STAKE/DEPOSIT DATA (Contract ke stakes array se)
+        if (categories.includes('STAKE')) {
+            const count = await window.contract.getStakeCount(address);
+            for (let i = 0; i < count; i++) {
+                const s = await window.contract.getStake(address, i);
+                finalLogs.push({
+                    type: 'DEPOSIT',
+                    amount: parseFloat(ethers.utils.formatEther(s.amount)).toFixed(2),
+                    date: new Date(s.startTime * 1000).toLocaleDateString(),
+                    time: new Date(s.startTime * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+                    detail: s.withBurn ? "With Burn" : "Standard"
+                });
+            }
+        }
+
+        // 2. INCOME DATA (Contract ke incomes array se)
+        const incomeLogs = await window.contract.getIncomeHistory(address);
+        incomeLogs.forEach(item => {
+            if (categories.includes(item.incomeType.toUpperCase())) {
+                finalLogs.push({
+                    type: item.incomeType.toUpperCase(),
+                    amount: parseFloat(ethers.utils.formatEther(item.amount)).toFixed(2),
+                    date: new Date(item.timestamp * 1000).toLocaleDateString(),
+                    time: new Date(item.timestamp * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+                    detail: item.incomeType
+                });
+            }
         });
+
+        return finalLogs;
     } catch (e) {
-        console.error("Fetch Error:", e);
+        console.error("History Error:", e);
         return [];
     }
 }
