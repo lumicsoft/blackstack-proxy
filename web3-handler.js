@@ -313,6 +313,11 @@ window.showHistory = async function(category) {
 
 async function fetchAndDisplayData() {
     try {
+        if (!window.signer || !window.contract) {
+            console.warn("Contract not ready, retrying...");
+            return;
+        }
+
         const userAddress = await window.signer.getAddress();
         
         // 1. Stats fetch karein
@@ -330,24 +335,33 @@ async function fetchAndDisplayData() {
         console.log("DEBUG - Business:", teamBusiness);
         console.log("DEBUG - Current Rank:", currentRank);
 
-        // 4. Update UI
-        if(document.getElementById('team-total-deposit')) document.getElementById('team-total-deposit').innerText = teamBusiness.toFixed(2);
-        if(document.getElementById('current-team-count')) document.getElementById('current-team-count').innerText = teamCount;
-
-        // 5. Progress Bar Update
-        const rankIndex = rankPlan.findIndex(r => r.name === currentRank);
-        const safeRankIndex = rankIndex === -1 ? 0 : rankIndex;
+        // 4. Update UI (HTML Elements)
+        if(document.getElementById('team-total-deposit')) 
+            document.getElementById('team-total-deposit').innerText = teamBusiness.toFixed(2);
+        if(document.getElementById('current-team-count')) 
+            document.getElementById('current-team-count').innerText = teamCount;
         
-        // Agar function exist karta hai toh call karein
-        if(typeof updateLeadershipUI === 'function') {
-            updateLeadershipUI(teamCount, teamBusiness, safeRankIndex);
+        // Agar Reward Bonus display karna hai toh stats[3] (Reward Index)
+        if(document.getElementById('rank-reward-available'))
+            document.getElementById('rank-reward-available').innerText = parseFloat(ethers.utils.formatEther(stats[3])).toFixed(2);
+
+        // 5. Progress Bar & Rank UI Update
+        // rankPlan ko window object se access karenge
+        if(window.rankPlan) {
+            const rankIndex = window.rankPlan.findIndex(r => r.name === currentRank);
+            const safeRankIndex = rankIndex === -1 ? 0 : rankIndex;
+            
+            if(typeof updateLeadershipUI === 'function') {
+                updateLeadershipUI(teamCount, teamBusiness, safeRankIndex);
+            }
+        } else {
+            console.error("rankPlan is not defined in window object!");
         }
 
     } catch (error) {
         console.error("Data Load Error:", error);
     }
 }
-
 
 window.fetchBlockchainHistory = async function(allowedTypes) {
     try {
