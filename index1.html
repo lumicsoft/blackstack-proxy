@@ -78,10 +78,19 @@
                 <h3 class="text-xs font-black orbitron mb-6 uppercase italic text-yellow-500 tracking-widest flex items-center gap-2">
                     <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Network & ROI Overview
                 </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-5">
                     <div class="bg-black/40 p-5 rounded-2xl border border-white/5 flex items-center gap-4">
                         <div class="p-3 bg-emerald-600/20 rounded-lg border border-emerald-600/30">
                             <i data-lucide="refresh-cw" class="text-emerald-500 w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="label-text">Total ROI Income</p>
+                            <h4 class="text-xl font-black orbitron text-white">   blx<span id="roi-earning">0.00</span></h4>
+                        </div>
+                    </div>
+                    <div class="bg-black/40 p-5 rounded-2xl border border-white/5 flex items-center gap-4">
+                        <div class="p-3 bg-yellow-600/20 rounded-lg border border-yellow-600/30">
+                            <i data-lucide="clock" class="text-yellow-500 w-6 h-6"></i>
                         </div>
                         <div>
                             <p class="label-text">Pending ROI</p>
@@ -216,7 +225,6 @@
                 const addr = localStorage.getItem('userAddress');
                 if(addr && typeof fetchAllData === 'function') {
                     await fetchAllData(addr);
-                    // Pending ROI fetch logic
                     if(window.contract) {
                         try {
                             const pending = await window.contract.getPendingROI(addr);
