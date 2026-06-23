@@ -1,140 +1,97 @@
-/* style-premium-blackstax.css - Master Theme */
-
-:root {
-    /* Emerald & Obsidian Palette */
-    --primary: #05e88a;      
-    --secondary: #02C076;    
-    --accent: #019a5e;       
-    --bg-dark: #05070a;      
-    --bg-panel: #080c14;     
-}
-
-body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background: #050505;
-    background-image: radial-gradient(circle at 50% 50%, #0d1a15 0%, var(--bg-dark) 100%);
-    background-attachment: fixed;
-    color: #f8fafc;
-    overflow-x: hidden;
-    margin: 0;
-}
-
-/* --- BACKGROUND MOVING DOTS --- */
-body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: -1;
-    pointer-events: none;
-    background-image: 
-        radial-gradient(2px 2px at 20px 30px, var(--primary), rgba(0,0,0,0)),
-        radial-gradient(2.5px 2.5px at 100px 150px, var(--primary), rgba(0,0,0,0));
-    background-size: 300px 300px;
-    animation: floatingDots 30s linear infinite;
-    opacity: 0.15;
-}
-
-@keyframes floatingDots {
-    from { background-position: 0 0; }
-    to { background-position: 300px -600px; }
-}
-
-.orbitron { font-family: 'Orbitron', sans-serif; }
-
-/* Animated Background Canvas */
-#bg-canvas {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    z-index: -1;
-}
-
-/* Glassmorphism */
-.glass {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(2, 192, 118, 0.15);
-    border-radius: 24px;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Premium Running Border - Emerald Flow */
-.premium-border {
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
-}
-
-.premium-border::before {
-    content: '';
-    position: absolute;
-    top: -50%; left: -50%; width: 200%; height: 200%;
-    background: conic-gradient(
-        transparent, 
-        var(--primary), 
-        rgba(2, 192, 118, 0.5), 
-        var(--accent), 
-        transparent 40%
-    );
-    animation: rotate-border 6s linear infinite;
-    z-index: -2;
-}
-
-.premium-border::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    background: var(--bg-panel);
-    border-radius: 22px;
-    z-index: -1;
-}
-
-@keyframes rotate-border {
-    100% { transform: rotate(360deg); }
-}
-
-.text-gradient {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-}
-
-/* Button with Emerald Glow */
-.btn-glow {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: #000 !important;
-    font-weight: 900;
-    box-shadow: 0 10px 25px rgba(2, 192, 118, 0.2);
-    transition: all 0.3s ease;
-    border: none;
-    cursor: pointer;
-}
-
-.btn-glow:hover {
-    box-shadow: 0 0 30px rgba(2, 192, 118, 0.4);
-    transform: translateY(-2px);
-}
-
-.icon-circle {
-    width: 60px; height: 60px;
-    border-radius: 18px;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(2, 192, 118, 0.05);
-    border: 1px solid rgba(2, 192, 118, 0.2);
-    transition: all 0.5s ease;
-    color: var(--primary);
-}
-
-.icon-circle:hover {
-    border-color: var(--secondary);
-    color: var(--secondary);
-    background: rgba(2, 192, 118, 0.05);
-}
-
-@media (max-width: 768px) {
-    .hero-title { 
-        font-size: 3.5rem !important; 
-        letter-spacing: -2px;
+<style>
+    :root {
+        /* Emerald & Obsidian Palette */
+        --primary: #fbbf24;      /* Gold */
+        --secondary: #02C076;    /* Emerald Green */
+        --accent: #f59e0b;       /* Amber */
+        --bg-dark: #05070a;      /* Obsidian Black */
+        --bg-panel: #080c14;     /* Deep Navy Black */
     }
-}
+
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: var(--bg-dark);
+        color: #f8fafc;
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+    /* Moving Dots Background */
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: -1;
+        pointer-events: none;
+        background-image: 
+            radial-gradient(2px 2px at 20px 30px, var(--secondary), rgba(0,0,0,0)),
+            radial-gradient(2.5px 2.5px at 100px 150px, var(--primary), rgba(0,0,0,0));
+        background-size: 300px 300px;
+        animation: floatingDots 30s linear infinite;
+        opacity: 0.15;
+    }
+
+    @keyframes floatingDots {
+        from { background-position: 0 0; }
+        to { background-position: 300px -600px; }
+    }
+
+    /* Glass Cards with Premium Border */
+    .token-card, .feature-card, .stat-card, .why-card, .faq-item {
+        position: relative;
+        background: rgba(255, 255, 255, 0.02) !important;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(2, 192, 118, 0.15) !important;
+        border-radius: 24px;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    /* Running Border Effect */
+    .token-card::before, .feature-card::before {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%; width: 200%; height: 200%;
+        background: conic-gradient(transparent, var(--primary), var(--secondary), var(--accent), transparent 40%);
+        animation: rotate-border 6s linear infinite;
+        z-index: -2;
+    }
+
+    .token-card::after, .feature-card::after {
+        content: '';
+        position: absolute;
+        inset: 2px;
+        background: var(--bg-panel);
+        border-radius: 22px;
+        z-index: -1;
+    }
+
+    @keyframes rotate-border {
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Buttons */
+    .btn-launch, .btn-primary {
+        background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
+        color: #000 !important;
+        font-weight: 900 !important;
+        border: none !important;
+        box-shadow: 0 10px 25px rgba(2, 192, 118, 0.2);
+    }
+
+    .btn-launch:hover {
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Text */
+    .section-title, .tc-name, .tc-price {
+        font-family: 'Orbitron', sans-serif;
+    }
+
+    .text-gradient {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+</style>
