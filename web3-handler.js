@@ -25,6 +25,7 @@ const CONTRACT_ABI = [
     "function requestUnstake(uint256 stakeIndex) external",
     "function claimUnstake(uint256 stakeIndex) external",
     "function totalTeamBusiness(address) view returns (uint256)",
+     "function getPendingROI(address user) external view returns (uint256)"
     "function users(address) view returns (bool exists, address referrer, uint256 totalStaked, uint256 totalIncome, uint256 totalWithdrawn, uint256 activeDirects, uint256 teamCount, string currentRank)",
     "function getIncomeHistory(address user) external view returns(tuple(string incomeType, uint256 amount, uint256 timestamp)[])",
     "function getUserStats(address user) external view returns(uint256 roi, uint256 level, uint256 referral, uint256 reward, uint256 teamShare, uint256 teamCount, string rank)",
